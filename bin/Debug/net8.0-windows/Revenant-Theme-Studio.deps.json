@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Revenant-Theme-Studio/1.0.0": {
+        "runtime": {
+          "Revenant-Theme-Studio.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Revenant-Theme-Studio/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

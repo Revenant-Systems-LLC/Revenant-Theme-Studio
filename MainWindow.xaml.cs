@@ -31,7 +31,7 @@ namespace Revenant_Theme_Studio
         {
             var dialog = new OpenFolderDialog { Title = "Select Scan Root" };
             if (dialog.ShowDialog() == true)
-                ScanRootBox.Text = dialog.FolderName;
+                ViewModel.ScanRoot = dialog.FolderName;
         }
 
         private void ApplyManual_Click(object sender, RoutedEventArgs e)
@@ -39,9 +39,14 @@ namespace Revenant_Theme_Studio
             ViewModel.ApplyManual();
         }
 
-        private void RunAutoMatch_Click(object sender, RoutedEventArgs e)
+        private async void RunAutoMatch_Click(object sender, RoutedEventArgs e)
         {
-            ViewModel.RunAutoMatch(ScanRootBox.Text);
+            await ViewModel.RunAutoMatchAsync();
+        }
+
+        private void CancelAutoMatch_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.CancelAutoMatch();
         }
     }
 }

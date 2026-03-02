@@ -14,6 +14,8 @@
 
     <Window.Resources>
         <converters:FileNameConverter x:Key="FileNameConverter"/>
+        <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+
         <Style TargetType="Button">
             <Setter Property="Background" Value="#1A1A1A"/>
             <Setter Property="Foreground" Value="#FFD700"/>
@@ -68,7 +70,11 @@
         <!-- Icon Folder Selector -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
             <Label Content="Icon Library:" VerticalAlignment="Center" Width="100"/>
-            <TextBox Width="500" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <!-- IMPORTANT: Delay stops reload-on-every-keystroke -->
+            <TextBox Width="500"
+                     Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged, Delay=300}"/>
+
             <Button Content="Browse" Margin="8,0,0,0" Click="BrowseIconFolder_Click"/>
         </StackPanel>
 
@@ -85,18 +91,24 @@
                 <StackPanel>
                     <TextBlock Text="MANUAL MODE" FontWeight="Bold" FontSize="14"
                                Foreground="#FFD700" Margin="0,0,0,12"/>
+
                     <Label Content="Target Folder:"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0" Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}"/>
-                        <Button Grid.Column="1" Content="Browse" Margin="8,0,0,0" Click="BrowseTargetFolder_Click"/>
+
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Grid.Column="1" Content="Browse" Margin="8,0,0,0"
+                                Click="BrowseTargetFolder_Click"/>
                     </Grid>
+
                     <Label Content="Select Icon:" Margin="0,12,0,0"/>
+
                     <ListBox ItemsSource="{Binding IconList}"
-                             SelectedValue="{Binding SelectedIcon}"
+                             SelectedItem="{Binding SelectedIcon, Mode=TwoWay}"
                              Height="300"
                              ScrollViewer.VerticalScrollBarVisibility="Auto"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
@@ -105,6 +117,7 @@
                                 <WrapPanel/>
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
+
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Width="100" Margin="4" ToolTip="{Binding}">
@@ -147,23 +160,43 @@
                 <StackPanel>
                     <TextBlock Text="AUTO MODE" FontWeight="Bold" FontSize="14"
                                Foreground="#FFD700" Margin="0,0,0,12"/>
+
                     <Label Content="Scan Root Folder:"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBox x:Name="ScanRootBox" Grid.Column="0"/>
-                        <Button Grid.Column="1" Content="Browse" Margin="8,0,0,0" Click="BrowseScanRoot_Click"/>
+
+                        <!-- Bound to VM -->
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding ScanRoot, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <Button Grid.Column="1" Content="Browse" Margin="8,0,0,0"
+                                Click="BrowseScanRoot_Click"/>
                     </Grid>
+
                     <Label Content="Match Threshold (Levenshtein):" Margin="0,12,0,0"/>
                     <StackPanel Orientation="Horizontal">
-                        <Slider x:Name="ThresholdSlider" Minimum="1" Maximum="3" Value="2"
+                        <Slider Minimum="0" Maximum="6"
+                                Value="{Binding MatchThreshold, Mode=TwoWay}"
                                 Width="200" IsSnapToTickEnabled="True" TickFrequency="1"/>
-                        <TextBlock Text="{Binding ElementName=ThresholdSlider, Path=Value}"
-                                   Foreground="#FFD700" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding MatchThreshold}" Margin="8,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <Button Content="Run Auto-Match" Margin="0,12,0,0" Click="RunAutoMatch_Click"/>
+
+                    <Button Content="Run Auto-Match" Margin="0,12,0,0"
+                            Click="RunAutoMatch_Click"
+                            IsEnabled="{Binding IsAutoRunning, Converter={StaticResource InverseBooleanConverter}}"/>
+
+                    <Button Content="Cancel" Margin="0,8,0,0"
+                            Click="CancelAutoMatch_Click"
+                            IsEnabled="{Binding IsAutoRunning}"/>
+
+                    <ProgressBar Height="14" Margin="0,12,0,0"
+                                 IsIndeterminate="{Binding IsAutoRunning}"/>
+
+                    <TextBlock Text="{Binding AutoProgressText}" Margin="0,6,0,0"
+                               Foreground="#888888"/>
                 </StackPanel>
             </Border>
         </Grid>

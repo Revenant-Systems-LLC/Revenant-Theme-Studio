@@ -1,7 +1,11 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Revenant_Theme_Studio.Models;
 using Revenant_Theme_Studio.Services;
 
@@ -10,12 +14,20 @@ namespace Revenant_Theme_Studio.ViewModels
     public class MainViewModel : INotifyPropertyChanged
     {
         private readonly FolderIconService _folderIconService = new();
-        private readonly IconMatchingService _matchingService;
+        private readonly IconMatchingService _matchingService = new();
 
         private string _iconFolder = string.Empty;
         private string _selectedFolder = string.Empty;
         private string _selectedIcon = string.Empty;
         private string _statusMessage = "Ready.";
+
+        private string _scanRoot = string.Empty;
+        private int _matchThreshold = 2;
+
+        private bool _isAutoRunning;
+        private string _autoProgressText = string.Empty;
+
+        private CancellationTokenSource? _autoCts;
 
         public ObservableCollection<string> IconList { get; } = new();
         public ObservableCollection<IconMapping> PinnedMappings { get; } = new();
@@ -23,7 +35,14 @@ namespace Revenant_Theme_Studio.ViewModels
         public string IconFolder
         {
             get => _iconFolder;
-            set { _iconFolder = value; OnPropertyChanged(); LoadIcons(); }
+            set
+            {
+                _iconFolder = value;
+                OnPropertyChanged();
+
+                _matchingService.SetIconFolders(_iconFolder);
+                LoadIcons();
+            }
         }
 
         public string SelectedFolder
@@ -44,24 +63,50 @@ namespace Revenant_Theme_Studio.ViewModels
             set { _statusMessage = value; OnPropertyChanged(); }
         }
 
+        public string ScanRoot
+        {
+            get => _scanRoot;
+            set { _scanRoot = value; OnPropertyChanged(); }
+        }
+
+        public int MatchThreshold
+        {
+            get => _matchThreshold;
+            set { _matchThreshold = value; OnPropertyChanged(); }
+        }
+
+        public bool IsAutoRunning
+        {
+            get => _isAutoRunning;
+            set { _isAutoRunning = value; OnPropertyChanged(); }
+        }
+
+        public string AutoProgressText
+        {
+            get => _autoProgressText;
+            set { _autoProgressText = value; OnPropertyChanged(); }
+        }
+
         public MainViewModel()
         {
-            _iconFolder = string.Empty;
-            _matchingService = new IconMatchingService(
-                @"C:\The-Ossuary\Revenant-Systems\Projects\Revenant-Theme-Studio\IconEngine\icons",
-                @"C:\The-Ossuary\Revenant-Systems\Projects\Revenant-Theme-Studio\IconEngine\drive-icons",
-                @"C:\The-Ossuary\Revenant-Systems\Projects\Revenant-Theme-Studio\IconEngine\folder-icons",
-                @"C:\The-Ossuary\Revenant-Systems\Projects\Revenant-Theme-Studio\IconEngine\archive-icons"
-            );
-            LoadIcons();
+            // start empty; user selects a library folder
+            _matchingService.SetIconFolders();
         }
 
         private void LoadIcons()
         {
             IconList.Clear();
-            var icons = _matchingService.GetAllIcons();
-            foreach (var icon in icons)
+
+            if (string.IsNullOrWhiteSpace(_iconFolder) || !Directory.Exists(_iconFolder))
+            {
+                StatusMessage = "Select a valid Icon Library folder.";
+                return;
+            }
+
+            foreach (var icon in _matchingService.GetAllIcons())
                 IconList.Add(icon);
+
+            StatusMessage = $"Loaded {IconList.Count} icons.";
         }
 
         public void ApplyManual()
@@ -75,7 +120,8 @@ namespace Revenant_Theme_Studio.ViewModels
             try
             {
                 _folderIconService.ApplyIcon(SelectedFolder, SelectedIcon);
-                StatusMessage = $"Applied {Path.GetFileNameWithoutExtension(SelectedIcon)} to {Path.GetFileName(SelectedFolder)}";
+                StatusMessage =
+                    $"Applied {Path.GetFileNameWithoutExtension(SelectedIcon)} to {Path.GetFileName(SelectedFolder)}";
             }
             catch (Exception ex)
             {
@@ -83,54 +129,127 @@ namespace Revenant_Theme_Studio.ViewModels
             }
         }
 
-        public void RunAutoMatch(string scanRoot)
+        public async Task RunAutoMatchAsync()
         {
-            if (!Directory.Exists(scanRoot))
+            if (IsAutoRunning) return;
+
+            if (string.IsNullOrWhiteSpace(ScanRoot) || !Directory.Exists(ScanRoot))
             {
                 StatusMessage = "Scan root does not exist.";
                 return;
             }
 
-            int matched = 0;
-            int skipped = 0;
+            IsAutoRunning = true;
+            AutoProgressText = "Starting...";
+            StatusMessage = "Auto-match running...";
+
+            _autoCts = new CancellationTokenSource();
+            var token = _autoCts.Token;
+
+            int matched = 0, skipped = 0, scanned = 0;
             string lastError = "";
 
-            IEnumerable<string> dirs;
+            // IMPORTANT: type as IProgress<> so Report() exists
+            IProgress<(int scanned, int matched, int skipped, string current)> progress =
+                new Progress<(int scanned, int matched, int skipped, string current)>(p =>
+                {
+                    AutoProgressText =
+                        $"Scanned: {p.scanned} | Matched: {p.matched} | Skipped: {p.skipped} | {p.current}";
+                });
+
             try
             {
-                dirs = Directory.GetDirectories(scanRoot, "*", SearchOption.AllDirectories);
-            }
-            catch
-            {
-                dirs = Directory.GetDirectories(scanRoot, "*", SearchOption.TopDirectoryOnly);
-            }
+                await Task.Run(() =>
+                {
+                    foreach (var dir in SafeEnumerateDirectories(ScanRoot, token))
+                    {
+                        token.ThrowIfCancellationRequested();
+                        scanned++;
 
-            foreach (var dir in dirs)
+                        try
+                        {
+                            string folderName = Path.GetFileName(dir);
+                            string? icon = _matchingService.FindBestMatch(folderName, MatchThreshold);
+
+                            if (icon != null)
+                            {
+                                _folderIconService.ApplyIcon(dir, icon);
+                                matched++;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            skipped++;
+                            lastError = ex.Message;
+                        }
+
+                        if (scanned % 25 == 0)
+                            progress.Report((scanned, matched, skipped, Path.GetFileName(dir)));
+                    }
+                }, token);
+
+                StatusMessage = skipped > 0
+                    ? $"Done. {matched} matched, {skipped} skipped. Last error: {lastError}"
+                    : $"Auto-match complete. {matched} matched, 0 skipped.";
+            }
+            catch (OperationCanceledException)
             {
+                StatusMessage = $"Canceled. Scanned {scanned}, matched {matched}, skipped {skipped}.";
+            }
+            finally
+            {
+                IsAutoRunning = false;
+                AutoProgressText = "";
+                _autoCts?.Dispose();
+                _autoCts = null;
+            }
+        }
+
+        public void CancelAutoMatch()
+        {
+            _autoCts?.Cancel();
+        }
+
+        // Safer than Directory.GetDirectories(...AllDirectories) because it won't die on access-denied
+        private static IEnumerable<string> SafeEnumerateDirectories(string root, CancellationToken token)
+        {
+            var stack = new Stack<string>();
+            stack.Push(root);
+
+            while (stack.Count > 0)
+            {
+                token.ThrowIfCancellationRequested();
+                var current = stack.Pop();
+
+                IEnumerable<string> children;
                 try
                 {
-                    // Skip junction points and symlinks
-                    var info = new DirectoryInfo(dir);
-                    if (info.Attributes.HasFlag(FileAttributes.ReparsePoint)) continue;
-
-                    string folderName = Path.GetFileName(dir);
-                    string? icon = _matchingService.FindBestMatch(folderName);
-                    if (icon != null)
-                    {
-                        _folderIconService.ApplyIcon(dir, icon);
-                        matched++;
-                    }
+                    children = Directory.EnumerateDirectories(current);
                 }
-                catch (Exception ex)
+                catch
                 {
-                    skipped++;
-                    lastError = ex.Message;
+                    continue;
+                }
+
+                foreach (var dir in children)
+                {
+                    token.ThrowIfCancellationRequested();
+
+                    try
+                    {
+                        var info = new DirectoryInfo(dir);
+                        if (info.Attributes.HasFlag(FileAttributes.ReparsePoint))
+                            continue; // skip junctions/symlinks
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+
+                    yield return dir;
+                    stack.Push(dir);
                 }
             }
-
-            StatusMessage = skipped > 0
-                ? $"Done. {matched} matched, {skipped} skipped. Last error: {lastError}"
-                : $"Auto-match complete. {matched} matched, 0 skipped.";
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
