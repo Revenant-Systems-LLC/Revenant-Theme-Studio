@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Revenant_Theme_Studio.ViewModels"
         xmlns:converters="clr-namespace:Revenant_Theme_Studio.Converters"
-        Title="Revenant Theme Studio" Height="700" Width="1100"
+        Title="Revenant Theme Studio" Height="760" Width="1200"
         Background="#0D0D0D" Foreground="#FFD700"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize">
@@ -13,7 +13,6 @@
     </Window.DataContext>
 
     <Window.Resources>
-        <converters:FileNameConverter x:Key="FileNameConverter"/>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
 
         <Style TargetType="Button">
@@ -51,42 +50,44 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,16">
             <TextBlock Text="REVENANT THEME STUDIO"
                        FontSize="24" FontWeight="Bold"
                        Foreground="#FFD700"
                        FontFamily="Segoe UI"/>
-            <TextBlock Text="Folder Icon Manager"
+            <TextBlock Text="Folder and System Icon Manager"
                        FontSize="12" Foreground="#888888"
                        FontFamily="Segoe UI"/>
             <Separator Background="#FFD700" Margin="0,8,0,0" Height="1"/>
         </StackPanel>
 
-        <!-- Icon Folder Selector -->
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,12">
-            <Label Content="Icon Library:" VerticalAlignment="Center" Width="100"/>
-
-            <!-- IMPORTANT: Delay stops reload-on-every-keystroke -->
-            <TextBox Width="500"
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+            <Label Content="Icon Library:" VerticalAlignment="Center" Width="130"/>
+            <TextBox Width="540"
                      Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged, Delay=300}"/>
-
             <Button Content="Browse" Margin="8,0,0,0" Click="BrowseIconFolder_Click"/>
         </StackPanel>
 
-        <!-- Main Content -->
-        <Grid Grid.Row="2">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,12">
+            <Label Content="System Resource:" VerticalAlignment="Center" Width="130"/>
+            <TextBox Width="540"
+                     Text="{Binding SystemResourcePath, UpdateSourceTrigger=PropertyChanged, Delay=300}"/>
+            <Button Content="Browse .mun" Margin="8,0,0,0" Click="BrowseSystemResource_Click"/>
+            <Button Content="Load Icons" Margin="8,0,0,0" Click="ReloadIconLibrary_Click"/>
+        </StackPanel>
+
+        <Grid Grid.Row="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="16"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Left: Manual Mode -->
             <Border Grid.Column="0" BorderBrush="#FFD700" BorderThickness="1" Padding="12">
                 <StackPanel>
                     <TextBlock Text="MANUAL MODE" FontWeight="Bold" FontSize="14"
@@ -105,11 +106,11 @@
                                 Click="BrowseTargetFolder_Click"/>
                     </Grid>
 
-                    <Label Content="Select Icon:" Margin="0,12,0,0"/>
+                    <Label Content="Select Icon (Library + imageres.dll.mun):" Margin="0,12,0,0"/>
 
                     <ListBox ItemsSource="{Binding IconList}"
                              SelectedItem="{Binding SelectedIcon, Mode=TwoWay}"
-                             Height="300"
+                             Height="390"
                              ScrollViewer.VerticalScrollBarVisibility="Auto"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemsPanel>
@@ -120,9 +121,9 @@
 
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Width="100" Margin="4" ToolTip="{Binding}">
-                                    <Image Width="72" Height="72" Stretch="Uniform" Source="{Binding}"/>
-                                    <TextBlock Text="{Binding Converter={StaticResource FileNameConverter}}"
+                                <StackPanel Width="110" Margin="4" ToolTip="{Binding DisplayName}">
+                                    <Image Width="72" Height="72" Stretch="Uniform" Source="{Binding PreviewImage}"/>
+                                    <TextBlock Text="{Binding DisplayName}"
                                                Foreground="#FFD700"
                                                FontSize="10"
                                                TextAlignment="Center"
@@ -133,17 +134,16 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
 
-                    <!-- Icon Preview -->
                     <Border BorderBrush="#FFD700" BorderThickness="1" Margin="0,12,0,0" Padding="8" Height="120">
                         <StackPanel Orientation="Horizontal">
                             <Image Width="96" Height="96" Stretch="Uniform"
-                                   Source="{Binding SelectedIcon}"
+                                   Source="{Binding SelectedIcon.PreviewImage}"
                                    VerticalAlignment="Center"/>
                             <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="Selected:"
                                            Foreground="#888888"
                                            FontSize="11"/>
-                                <TextBlock Text="{Binding SelectedIcon, Converter={StaticResource FileNameConverter}}"
+                                <TextBlock Text="{Binding SelectedIcon.DisplayName}"
                                            Foreground="#FFD700"
                                            FontSize="14"
                                            FontWeight="Bold"/>
@@ -155,7 +155,6 @@
                 </StackPanel>
             </Border>
 
-            <!-- Right: Auto Mode -->
             <Border Grid.Column="2" BorderBrush="#FFD700" BorderThickness="1" Padding="12">
                 <StackPanel>
                     <TextBlock Text="AUTO MODE" FontWeight="Bold" FontSize="14"
@@ -168,7 +167,6 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Bound to VM -->
                         <TextBox Grid.Column="0"
                                  Text="{Binding ScanRoot, UpdateSourceTrigger=PropertyChanged}"/>
 
@@ -201,8 +199,7 @@
             </Border>
         </Grid>
 
-        <!-- Status Bar -->
-        <Border Grid.Row="3" BorderBrush="#FFD700" BorderThickness="1"
+        <Border Grid.Row="4" BorderBrush="#FFD700" BorderThickness="1"
                 Margin="0,12,0,0" Padding="8,4">
             <TextBlock Text="{Binding StatusMessage}" Foreground="#FFD700" FontSize="12"/>
         </Border>

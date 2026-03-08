@@ -17,7 +17,32 @@ namespace Revenant_Theme_Studio
         {
             var dialog = new OpenFolderDialog { Title = "Select Icon Library Folder" };
             if (dialog.ShowDialog() == true)
+            {
                 ViewModel.IconFolder = dialog.FolderName;
+                ViewModel.ReloadIcons();
+            }
+        }
+
+        private void BrowseSystemResource_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select System Icon Resource",
+                Filter = "MUI Resource (*.mun;*.dll)|*.mun;*.dll|All Files (*.*)|*.*",
+                CheckFileExists = true,
+                Multiselect = false
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                ViewModel.SystemResourcePath = dialog.FileName;
+                ViewModel.ReloadIcons();
+            }
+        }
+
+        private void ReloadIconLibrary_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ReloadIcons();
         }
 
         private void BrowseTargetFolder_Click(object sender, RoutedEventArgs e)

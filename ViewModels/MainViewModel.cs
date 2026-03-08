@@ -6,6 +6,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 using Revenant_Theme_Studio.Models;
 using Revenant_Theme_Studio.Services;
 
@@ -15,11 +16,13 @@ namespace Revenant_Theme_Studio.ViewModels
     {
         private readonly FolderIconService _folderIconService = new();
         private readonly IconMatchingService _matchingService = new();
+        private readonly SystemIconResourceService _systemIconService = new();
 
         private string _iconFolder = string.Empty;
         private string _selectedFolder = string.Empty;
-        private string _selectedIcon = string.Empty;
+        private IconChoice? _selectedIcon;
         private string _statusMessage = "Ready.";
+        private string _systemResourcePath = string.Empty;
 
         private string _scanRoot = string.Empty;
         private int _matchThreshold = 2;
@@ -29,7 +32,7 @@ namespace Revenant_Theme_Studio.ViewModels
 
         private CancellationTokenSource? _autoCts;
 
-        public ObservableCollection<string> IconList { get; } = new();
+        public ObservableCollection<IconChoice> IconList { get; } = new();
         public ObservableCollection<IconMapping> PinnedMappings { get; } = new();
 
         public string IconFolder
@@ -41,7 +44,17 @@ namespace Revenant_Theme_Studio.ViewModels
                 OnPropertyChanged();
 
                 _matchingService.SetIconFolders(_iconFolder);
-                LoadIcons();
+                ReloadIcons();
+            }
+        }
+
+        public string SystemResourcePath
+        {
+            get => _systemResourcePath;
+            set
+            {
+                _systemResourcePath = value;
+                OnPropertyChanged();
             }
         }
 
@@ -51,7 +64,7 @@ namespace Revenant_Theme_Studio.ViewModels
             set { _selectedFolder = value; OnPropertyChanged(); }
         }
 
-        public string SelectedIcon
+        public IconChoice? SelectedIcon
         {
             get => _selectedIcon;
             set { _selectedIcon = value; OnPropertyChanged(); }
@@ -91,27 +104,49 @@ namespace Revenant_Theme_Studio.ViewModels
         {
             // start empty; user selects a library folder
             _matchingService.SetIconFolders();
+            SystemResourcePath = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\SystemResources\imageres.dll.mun");
+            ReloadIcons();
         }
 
-        private void LoadIcons()
+        public void ReloadIcons()
         {
             IconList.Clear();
+            int loadedFromFolders = 0;
+            int loadedFromSystemResource = 0;
 
-            if (string.IsNullOrWhiteSpace(_iconFolder) || !Directory.Exists(_iconFolder))
+            if (!string.IsNullOrWhiteSpace(_iconFolder) && Directory.Exists(_iconFolder))
             {
-                StatusMessage = "Select a valid Icon Library folder.";
+                foreach (var iconPath in _matchingService.GetAllIcons())
+                {
+                    if (!TryCreateFileIconChoice(iconPath, out var iconChoice))
+                        continue;
+
+                    IconList.Add(iconChoice);
+                    loadedFromFolders++;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(SystemResourcePath) && File.Exists(SystemResourcePath))
+            {
+                foreach (var iconChoice in _systemIconService.LoadIcons(SystemResourcePath))
+                {
+                    IconList.Add(iconChoice);
+                    loadedFromSystemResource++;
+                }
+            }
+
+            if (loadedFromFolders == 0 && loadedFromSystemResource == 0)
+            {
+                StatusMessage = "No icons were loaded. Select an icon folder and/or a valid imageres.dll.mun path.";
                 return;
             }
 
-            foreach (var icon in _matchingService.GetAllIcons())
-                IconList.Add(icon);
-
-            StatusMessage = $"Loaded {IconList.Count} icons.";
+            StatusMessage = $"Loaded {loadedFromFolders} file icons and {loadedFromSystemResource} system icons.";
         }
 
         public void ApplyManual()
         {
-            if (string.IsNullOrEmpty(SelectedFolder) || string.IsNullOrEmpty(SelectedIcon))
+            if (string.IsNullOrEmpty(SelectedFolder) || SelectedIcon == null)
             {
                 StatusMessage = "Select a folder and an icon first.";
                 return;
@@ -119,13 +154,42 @@ namespace Revenant_Theme_Studio.ViewModels
 
             try
             {
-                _folderIconService.ApplyIcon(SelectedFolder, SelectedIcon);
+                _folderIconService.ApplyIcon(SelectedFolder, SelectedIcon.ResourcePath, SelectedIcon.ResourceIndex);
                 StatusMessage =
-                    $"Applied {Path.GetFileNameWithoutExtension(SelectedIcon)} to {Path.GetFileName(SelectedFolder)}";
+                    $"Applied {SelectedIcon.DisplayName} to {Path.GetFileName(SelectedFolder)}";
             }
             catch (Exception ex)
             {
                 StatusMessage = $"Error: {ex.Message}";
+            }
+        }
+
+        private static bool TryCreateFileIconChoice(string iconPath, out IconChoice iconChoice)
+        {
+            iconChoice = null!;
+
+            try
+            {
+                var preview = new BitmapImage();
+                preview.BeginInit();
+                preview.UriSource = new Uri(iconPath, UriKind.Absolute);
+                preview.CacheOption = BitmapCacheOption.OnLoad;
+                preview.EndInit();
+                preview.Freeze();
+
+                iconChoice = new IconChoice
+                {
+                    ResourcePath = iconPath,
+                    ResourceIndex = 0,
+                    DisplayName = Path.GetFileNameWithoutExtension(iconPath),
+                    PreviewImage = preview
+                };
+
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
