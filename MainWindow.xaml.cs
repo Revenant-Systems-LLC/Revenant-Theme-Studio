@@ -19,7 +19,15 @@ namespace Revenant_Theme_Studio
             if (dialog.ShowDialog() == true)
             {
                 ViewModel.IconFolder = dialog.FolderName;
-                ViewModel.ReloadIcons();
+            }
+        }
+
+        private void BrowseTargetFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFolderDialog { Title = "Select Folder" };
+            if (dialog.ShowDialog() == true)
+            {
+                ViewModel.SelectedFolder = dialog.FolderName;
             }
         }
 
@@ -40,71 +48,22 @@ namespace Revenant_Theme_Studio
             }
         }
 
-        private void ReloadIconLibrary_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.ReloadIcons();
-        }
-
-        private void BrowseTargetFolder_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFolderDialog { Title = "Select Target Folder" };
-            if (dialog.ShowDialog() == true)
-                ViewModel.SelectedFolder = dialog.FolderName;
-        }
-
         private void BrowseScanRoot_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFolderDialog { Title = "Select Scan Root" };
+            var dialog = new OpenFolderDialog { Title = "Select Auto Match Root" };
             if (dialog.ShowDialog() == true)
-                ViewModel.ScanRoot = dialog.FolderName;
-        }
-
-        private void ApplyManual_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.ApplyManual();
-        }
-
-        private async void RunAutoMatch_Click(object sender, RoutedEventArgs e)
-        {
-            if (!ViewModel.IsAutoWarningAccepted)
             {
-                ViewModel.StatusMessage = "Accept the warning page before using auto mode.";
-                MainTabs.SelectedIndex = 3;
-                return;
+                ViewModel.ScanRoot = dialog.FolderName;
             }
-
-            await ViewModel.RunAutoMatchAsync();
         }
 
-        private void CancelAutoMatch_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.CancelAutoMatch();
-        }
+        private void ApplyFolderIcon_Click(object sender, RoutedEventArgs e) => ViewModel.ApplyFolderIcon();
+        private void ApplyDriveIcon_Click(object sender, RoutedEventArgs e) => ViewModel.ApplyDriveIcon();
+        private void ApplyShellIcon_Click(object sender, RoutedEventArgs e) => ViewModel.ApplyShellIcon();
+        private void UndoLastChange_Click(object sender, RoutedEventArgs e) => ViewModel.UndoLastChange();
+        private void RestoreShellDefault_Click(object sender, RoutedEventArgs e) => ViewModel.RestoreSelectedShellDefault();
 
-        private void IntroNavigate_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is not FrameworkElement { Tag: string tagValue })
-                return;
-
-            if (!int.TryParse(tagValue, out var tabIndex))
-                return;
-
-            MainTabs.SelectedIndex = tabIndex;
-        }
-
-        private void AcceptWarning_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.IsAutoWarningAccepted = true;
-            ViewModel.StatusMessage = "Warning accepted. Configure auto mode and run when ready.";
-            MainTabs.SelectedIndex = 1;
-        }
-
-        private void DenyWarning_Click(object sender, RoutedEventArgs e)
-        {
-            ViewModel.IsAutoWarningAccepted = false;
-            ViewModel.CancelAutoMatch();
-            ViewModel.StatusMessage = "Auto/registry flow denied.";
-            MainTabs.SelectedIndex = 0;
-        }
+        private async void RunAutoMatch_Click(object sender, RoutedEventArgs e) => await ViewModel.RunAutoMatchAsync();
+        private void CancelAutoMatch_Click(object sender, RoutedEventArgs e) => ViewModel.CancelAutoMatch();
     }
 }
