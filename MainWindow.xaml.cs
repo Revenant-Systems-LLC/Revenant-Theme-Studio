@@ -73,5 +73,29 @@ namespace Revenant_Theme_Studio
         {
             ViewModel.CancelAutoMatch();
         }
+
+        private void IntroNavigate_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement { Tag: string tagValue })
+                return;
+
+            if (!int.TryParse(tagValue, out var tabIndex))
+                return;
+
+            MainTabs.SelectedIndex = tabIndex;
+        }
+
+        private void AcceptWarning_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.StatusMessage = "Warning accepted. Configure auto mode and run when ready.";
+            MainTabs.SelectedIndex = 1;
+        }
+
+        private void DenyWarning_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.CancelAutoMatch();
+            ViewModel.StatusMessage = "Auto/registry flow denied.";
+            MainTabs.SelectedIndex = 0;
+        }
     }
 }

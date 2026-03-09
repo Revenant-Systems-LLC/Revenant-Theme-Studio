@@ -3,8 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Revenant_Theme_Studio.ViewModels"
         xmlns:converters="clr-namespace:Revenant_Theme_Studio.Converters"
-        Title="Revenant Theme Studio" Height="860" Width="1360"
-        Background="#ECECEC" Foreground="#111111"
+        Title="Revenant Theme Studio"
+        Height="860"
+        Width="1360"
+        Background="#0D0D0D"
+        Foreground="#FFD700"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResize">
 
@@ -16,65 +19,51 @@
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
 
         <Style TargetType="Button">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="Foreground" Value="#111111"/>
-            <Setter Property="BorderBrush" Value="#111111"/>
-            <Setter Property="BorderThickness" Value="3"/>
+            <Setter Property="Background" Value="#1A1A1A"/>
+            <Setter Property="Foreground" Value="#FFD700"/>
+            <Setter Property="BorderBrush" Value="#FFD700"/>
+            <Setter Property="BorderThickness" Value="2"/>
             <Setter Property="Padding" Value="10,6"/>
             <Setter Property="Margin" Value="4"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontFamily" Value="Segoe UI Semibold"/>
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="16"/>
         </Style>
 
         <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="Foreground" Value="#111111"/>
-            <Setter Property="BorderBrush" Value="#111111"/>
-            <Setter Property="BorderThickness" Value="3"/>
+            <Setter Property="Background" Value="#1A1A1A"/>
+            <Setter Property="Foreground" Value="#FFD700"/>
+            <Setter Property="BorderBrush" Value="#FFD700"/>
+            <Setter Property="BorderThickness" Value="2"/>
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontSize" Value="16"/>
             <Setter Property="Margin" Value="0,4"/>
         </Style>
 
-        <Style TargetType="Label">
-            <Setter Property="Foreground" Value="#111111"/>
-            <Setter Property="FontFamily" Value="Segoe UI Semibold"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="0,8,0,2"/>
-        </Style>
-
         <Style TargetType="ListBox">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="Foreground" Value="#111111"/>
-            <Setter Property="BorderBrush" Value="#111111"/>
-            <Setter Property="BorderThickness" Value="3"/>
+            <Setter Property="Background" Value="#1A1A1A"/>
+            <Setter Property="Foreground" Value="#FFD700"/>
+            <Setter Property="BorderBrush" Value="#FFD700"/>
+            <Setter Property="BorderThickness" Value="2"/>
         </Style>
 
         <Style x:Key="FrameBorderStyle" TargetType="Border">
-            <Setter Property="BorderBrush" Value="#111111"/>
-            <Setter Property="BorderThickness" Value="4"/>
-            <Setter Property="Background" Value="#F5F5F5"/>
+            <Setter Property="BorderBrush" Value="#FFD700"/>
+            <Setter Property="BorderThickness" Value="3"/>
+            <Setter Property="Background" Value="#111111"/>
             <Setter Property="Padding" Value="12"/>
             <Setter Property="Margin" Value="6"/>
         </Style>
 
-        <Style x:Key="TitleTextStyle" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI Black"/>
-            <Setter Property="FontSize" Value="34"/>
-            <Setter Property="Foreground" Value="#111111"/>
-        </Style>
-
         <Style x:Key="OvalActionButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="MinWidth" Value="190"/>
-            <Setter Property="MinHeight" Value="72"/>
+            <Setter Property="MinWidth" Value="200"/>
+            <Setter Property="MinHeight" Value="76"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid>
-                            <Ellipse Fill="White" Stroke="#111111" StrokeThickness="4"/>
+                            <Ellipse Fill="#1A1A1A" Stroke="#FFD700" StrokeThickness="3"/>
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Grid>
                     </ControlTemplate>
@@ -90,43 +79,43 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Style="{StaticResource FrameBorderStyle}" Padding="18,14">
-            <TextBlock Text="RTS - ICON EDITOR UIX" Style="{StaticResource TitleTextStyle}"/>
+        <Border Grid.Row="0" Style="{StaticResource FrameBorderStyle}">
+            <TextBlock Text="RTS - ICON EDITOR UIX" FontSize="34" FontFamily="Segoe UI Black"/>
         </Border>
 
-        <TabControl Grid.Row="1" Margin="6" FontSize="18" BorderThickness="0" Background="#ECECEC">
+        <TabControl x:Name="MainTabs" Grid.Row="1" Margin="6" FontSize="16" Background="#0D0D0D" BorderThickness="0">
             <TabItem Header="INTRO SCREEN">
-                <Grid Background="#ECECEC" Margin="8">
+                <Grid Background="#0D0D0D" Margin="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="520"/>
+                        <ColumnDefinition Width="560"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="1" Style="{StaticResource FrameBorderStyle}" Padding="14">
+                    <Border Grid.Column="1" Style="{StaticResource FrameBorderStyle}">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
 
-                            <Border Grid.Row="0" BorderBrush="#111111" BorderThickness="4" Padding="10" Margin="0,0,0,16">
-                                <TextBlock Text="RTS" FontSize="44" FontFamily="Segoe Script" HorizontalAlignment="Center"/>
+                            <Border Grid.Row="0" BorderBrush="#FFD700" BorderThickness="3" Padding="10" Margin="0,0,0,16">
+                                <TextBlock Text="RTS" FontSize="42" FontFamily="Segoe Script" HorizontalAlignment="Center"/>
                             </Border>
 
-                            <UniformGrid Grid.Row="1" Columns="2" Rows="6" Margin="40,8,40,4">
-                                <Button Content="folder-icons"/>
-                                <Button Content="system icons"/>
-                                <Button Content="drive icons"/>
-                                <Button Content="registry edits"/>
-                                <Button Content="icon editor"/>
-                                <Button Content="dual screen"/>
-                                <Button Content="icon-logos"/>
-                                <Button Content="themes"/>
-                                <Button Content="wallpapers"/>
-                                <Button Content="resource mngr"/>
-                                <Button Content="help/support"/>
-                                <Button Content="settings"/>
+                            <UniformGrid Grid.Row="1" Columns="2" Rows="6" Margin="50,10,50,10">
+                                <Button Content="folder-icons" Click="IntroNavigate_Click" Tag="1"/>
+                                <Button Content="system icons" Click="IntroNavigate_Click" Tag="2"/>
+                                <Button Content="drive icons" Click="IntroNavigate_Click" Tag="1"/>
+                                <Button Content="registry edits" Click="IntroNavigate_Click" Tag="3"/>
+                                <Button Content="icon editor" Click="IntroNavigate_Click" Tag="2"/>
+                                <Button Content="dual screen" IsEnabled="False"/>
+                                <Button Content="icon-logos" IsEnabled="False"/>
+                                <Button Content="themes" IsEnabled="False"/>
+                                <Button Content="wallpapers" IsEnabled="False"/>
+                                <Button Content="resource mngr" IsEnabled="False"/>
+                                <Button Content="help/support" IsEnabled="False"/>
+                                <Button Content="settings" IsEnabled="False"/>
                             </UniformGrid>
                         </Grid>
                     </Border>
@@ -134,7 +123,7 @@
             </TabItem>
 
             <TabItem Header="FOLDER + DRIVE ICONS">
-                <Grid Background="#ECECEC" Margin="8">
+                <Grid Background="#0D0D0D" Margin="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
@@ -161,45 +150,31 @@
                             </Grid>
 
                             <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged, Delay=300}" ToolTip="location of folder icons"/>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged, Delay=300}"/>
                                 <Button Grid.Column="1" Content="..." Width="60" Click="BrowseIconFolder_Click"/>
                             </Grid>
 
                             <Grid Grid.Row="2">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}" ToolTip="intended icon to be changed"/>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}"/>
                                 <Button Grid.Column="1" Content="..." Width="60" Click="BrowseTargetFolder_Click"/>
                             </Grid>
 
-                            <ListBox Grid.Row="3" Margin="0,10,0,8"
-                                     ItemsSource="{Binding IconList}"
-                                     SelectedItem="{Binding SelectedIcon, Mode=TwoWay}"
-                                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel/>
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
+                            <ListBox Grid.Row="3" Margin="0,10,0,8" ItemsSource="{Binding IconList}" SelectedItem="{Binding SelectedIcon, Mode=TwoWay}">
+                                <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <StackPanel Width="90" Margin="5">
-                                            <Image Width="50" Height="50" Stretch="Uniform" Source="{Binding PreviewImage}"/>
-                                            <TextBlock Text="{Binding DisplayName}" FontSize="11" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="84"/>
+                                        <StackPanel Width="90" Margin="4">
+                                            <Image Width="50" Height="50" Source="{Binding PreviewImage}"/>
+                                            <TextBlock Text="{Binding DisplayName}" FontSize="11" TextAlignment="Center" TextWrapping="Wrap"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
 
-                            <Border Grid.Row="4" BorderBrush="#111111" BorderThickness="4" Padding="8" Margin="0,0,0,10">
-                                <TextBlock Text="{Binding SelectedIcon.DisplayName, TargetNullValue=intended icon to be changed}" FontFamily="Segoe UI Semibold" FontSize="24" HorizontalAlignment="Center"/>
+                            <Border Grid.Row="4" BorderBrush="#FFD700" BorderThickness="3" Padding="8" Margin="0,0,0,8">
+                                <TextBlock Text="{Binding SelectedIcon.DisplayName, TargetNullValue=intended icon to be changed}" FontSize="20" FontFamily="Segoe UI Semibold" HorizontalAlignment="Center"/>
                             </Border>
 
                             <Button Grid.Row="5" Content="APPLY" Style="{StaticResource OvalActionButton}" HorizontalAlignment="Center" Click="ApplyManual_Click"/>
@@ -217,54 +192,45 @@
                             </Grid.RowDefinitions>
 
                             <Grid Grid.Row="0" Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                 <Button Grid.Column="0" Content="DRIVE ICONS"/>
-                                <Button Grid.Column="1" Content="MANUAL"/>
+                                <Button Grid.Column="1" Content="AUTO"/>
                             </Grid>
 
                             <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" Text="{Binding ScanRoot, UpdateSourceTrigger=PropertyChanged}" ToolTip="location of drive icons / scan root"/>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding ScanRoot, UpdateSourceTrigger=PropertyChanged}"/>
                                 <Button Grid.Column="1" Content="..." Width="60" Click="BrowseScanRoot_Click"/>
                             </Grid>
 
-                            <Border Grid.Row="2" BorderBrush="#111111" BorderThickness="4" Padding="8" Margin="0,10,0,8">
-                                <ListBox ItemsSource="{Binding IconList}" SelectedItem="{Binding SelectedIcon, Mode=TwoWay}">
-                                    <ListBox.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel/>
-                                        </ItemsPanelTemplate>
-                                    </ListBox.ItemsPanel>
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Width="80" Margin="4">
-                                                <Image Width="46" Height="46" Stretch="Uniform" Source="{Binding PreviewImage}"/>
-                                                <TextBlock Text="{Binding DisplayName}" FontSize="10" TextAlignment="Center" TextWrapping="Wrap"/>
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
+                            <Border Grid.Row="2" BorderBrush="#FFD700" BorderThickness="3" Padding="10" Margin="0,10,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="Match Threshold (Levenshtein)" FontFamily="Segoe UI Semibold" FontSize="18"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <Slider Minimum="0" Maximum="6" Value="{Binding MatchThreshold, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="1" Width="280"/>
+                                        <TextBlock Text="{Binding MatchThreshold}" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding AutoProgressText}" Foreground="#BBBBBB" Margin="0,8,0,0"/>
+                                    <ProgressBar Height="16" Margin="0,8,0,0" IsIndeterminate="{Binding IsAutoRunning}"/>
+                                </StackPanel>
                             </Border>
 
-                            <Border Grid.Row="3" BorderBrush="#111111" BorderThickness="4" Padding="8" Margin="0,0,0,8">
-                                <TextBlock Text="{Binding SelectedIcon.DisplayName, TargetNullValue=intended icon to be changed / drive select}" FontFamily="Segoe UI Semibold" FontSize="24" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <Border Grid.Row="3" BorderBrush="#FFD700" BorderThickness="3" Padding="8" Margin="0,0,0,8">
+                                <TextBlock Text="{Binding SelectedIcon.DisplayName, TargetNullValue=intended icon to be changed / drive select}" FontSize="20" FontFamily="Segoe UI Semibold" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
                             </Border>
 
-                            <Button Grid.Row="4" Content="APPLY" Style="{StaticResource OvalActionButton}" HorizontalAlignment="Center" Click="RunAutoMatch_Click"
-                                    IsEnabled="{Binding IsAutoRunning, Converter={StaticResource InverseBooleanConverter}}"/>
+                            <Grid Grid.Row="4">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Content="RUN AUTO" Style="{StaticResource OvalActionButton}" Click="RunAutoMatch_Click" IsEnabled="{Binding IsAutoRunning, Converter={StaticResource InverseBooleanConverter}}"/>
+                                <Button Grid.Column="1" Content="CANCEL" Style="{StaticResource OvalActionButton}" Click="CancelAutoMatch_Click" IsEnabled="{Binding IsAutoRunning}"/>
+                            </Grid>
                         </Grid>
                     </Border>
                 </Grid>
             </TabItem>
 
             <TabItem Header="ICON EDITOR">
-                <Grid Background="#ECECEC" Margin="8">
+                <Grid Background="#0D0D0D" Margin="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
@@ -277,44 +243,28 @@
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0" Grid.Column="0" Margin="0,0,8,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged, Delay=300}"/>
                         <Button Grid.Column="1" Content="..." Width="60" Click="BrowseIconFolder_Click"/>
                     </Grid>
 
                     <Grid Grid.Row="0" Grid.Column="1" Margin="8,0,8,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Text="{Binding SelectedIcon.DisplayName, TargetNullValue=intended icon being changed}" IsReadOnly="True"/>
                         <Button Grid.Column="1" Content="..." Width="60" IsEnabled="False"/>
                     </Grid>
 
                     <Grid Grid.Row="1" Grid.Column="0" Margin="0,4,8,8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Text="{Binding SystemResourcePath, UpdateSourceTrigger=PropertyChanged}"/>
                         <Button Grid.Column="1" Content="..." Width="60" Click="BrowseSystemResource_Click"/>
                     </Grid>
 
-                    <Border Grid.Row="2" Grid.Column="0" BorderBrush="#111111" BorderThickness="4" Padding="8" Margin="0,0,8,0">
+                    <Border Grid.Row="2" Grid.Column="0" BorderBrush="#FFD700" BorderThickness="3" Padding="8" Margin="0,0,8,0">
                         <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                            <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                             <ListBox Grid.Row="0" ItemsSource="{Binding IconList}" SelectedItem="{Binding SelectedIcon, Mode=TwoWay}">
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel/>
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
+                                <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Width="74" Margin="4">
@@ -324,96 +274,56 @@
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
-                            <TextBlock Grid.Row="1" Text="users icon folder" FontSize="18" FontFamily="Segoe UI Semibold" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                            <TextBlock Grid.Row="1" Text="users icon folder" FontSize="16" FontFamily="Segoe UI Semibold" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                         </Grid>
                     </Border>
 
-                    <Border Grid.Row="2" Grid.Column="1" BorderBrush="#111111" BorderThickness="4" Padding="8" Margin="8,0,8,0">
+                    <Border Grid.Row="2" Grid.Column="1" BorderBrush="#FFD700" BorderThickness="3" Padding="8" Margin="8,0,8,0">
                         <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                            <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                             <Viewbox Grid.Row="0" Stretch="Uniform">
-                                <Border BorderBrush="#111111" BorderThickness="4" CornerRadius="24" Padding="24" Background="White">
+                                <Border BorderBrush="#FFD700" BorderThickness="3" CornerRadius="20" Padding="20" Background="#1A1A1A">
                                     <Image Width="260" Height="260" Source="{Binding SelectedIcon.PreviewImage}"/>
                                 </Border>
                             </Viewbox>
-                            <TextBlock Grid.Row="1" Text="selected icon zoomed in" FontSize="18" FontFamily="Segoe UI Semibold" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                            <TextBlock Grid.Row="1" Text="selected icon zoomed in" FontSize="16" FontFamily="Segoe UI Semibold" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                         </Grid>
                     </Border>
 
-                    <StackPanel Grid.Row="1" Grid.RowSpan="2" Grid.Column="2" Margin="8,0,0,0">
-                        <UniformGrid Columns="2" Rows="6" Margin="0,0,0,8">
-                            <Button Content="color filter"/>
-                            <Button Content="brush"/>
-                            <Button Content="line weight"/>
-                            <Button Content="eraser"/>
-                            <Button Content="color select"/>
-                            <Button Content="opacity"/>
-                            <Button Content="?????"/>
-                            <Button Content=""/>
-                            <Button Content="you get the idea"/>
-                            <Button Content=""/>
-                            <Button Content=""/>
-                            <Button Content=""/>
-                        </UniformGrid>
-
-                        <Border BorderBrush="#111111" BorderThickness="4" Padding="6" Margin="0,6,0,8">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0" Text="BATCH EDIT OPTIONS" FontSize="26" FontFamily="Segoe UI Black" HorizontalAlignment="Center"/>
-                                <UniformGrid Grid.Row="1" Columns="2" Rows="1" Margin="0,6,0,0">
-                                    <Button Content="ALL"/>
-                                    <Button Content="SOME"/>
-                                </UniformGrid>
-                                <UniformGrid Grid.Row="2" Columns="2" Rows="1">
-                                    <Button Content="????"/>
-                                    <Button Content="??"/>
-                                </UniformGrid>
-                            </Grid>
-                        </Border>
-
-                        <Button Content="SAVE/APPLY" Style="{StaticResource OvalActionButton}" HorizontalAlignment="Center" Click="ReloadIconLibrary_Click"/>
-                    </StackPanel>
+                    <Border Grid.Row="1" Grid.RowSpan="2" Grid.Column="2" BorderBrush="#FFD700" BorderThickness="3" Padding="10" Margin="8,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="BATCH EDIT OPTIONS" FontSize="24" FontFamily="Segoe UI Black" Margin="0,0,0,8" HorizontalAlignment="Center"/>
+                            <TextBlock Text="ALL" FontFamily="Segoe UI Semibold" Margin="0,2"/>
+                            <TextBlock Text="SOME" FontFamily="Segoe UI Semibold" Margin="0,2"/>
+                            <TextBlock Text="Current build keeps editor tools as preview-only UI." Foreground="#BBBBBB" TextWrapping="Wrap" Margin="0,8,0,16"/>
+                            <Button Content="RELOAD ICONS" Click="ReloadIconLibrary_Click"/>
+                            <Button Content="APPLY TO FOLDER" Click="ApplyManual_Click"/>
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </TabItem>
 
             <TabItem Header="WARNING + AUTO">
-                <Grid Background="#ECECEC" Margin="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
+                <Grid Background="#0D0D0D" Margin="8">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
 
                     <Border Grid.Column="0" Style="{StaticResource FrameBorderStyle}">
                         <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
 
-                            <Border Grid.Row="0" BorderBrush="#111111" BorderThickness="4" Padding="12" Margin="0,0,0,10">
-                                <TextBlock Text="WARNING PAGE LAYOUT" FontFamily="Segoe UI Black" FontSize="54" TextWrapping="Wrap"/>
+                            <Border Grid.Row="0" BorderBrush="#FFD700" BorderThickness="3" Padding="12" Margin="0,0,0,10">
+                                <TextBlock Text="WARNING PAGE LAYOUT" FontFamily="Segoe UI Black" FontSize="44" TextWrapping="Wrap"/>
                             </Border>
 
-                            <Border Grid.Row="1" BorderBrush="#111111" BorderThickness="4" Padding="16" Margin="0,0,0,10">
-                                <TextBlock FontSize="42" FontFamily="Segoe UI Semibold" TextWrapping="Wrap"
-                                           Text="Very clear and very blunt warning here about using any of the registry editing features. We will automatically back up a snapshot of the regis as soon as user accepts responsibility below"/>
+                            <Border Grid.Row="1" BorderBrush="#FFD700" BorderThickness="3" Padding="14" Margin="0,0,0,10">
+                                <TextBlock FontSize="30" FontFamily="Segoe UI Semibold" TextWrapping="Wrap"
+                                           Text="Very clear and very blunt warning here about using any of the registry editing features. We will automatically back up a snapshot as soon as user accepts responsibility below."/>
                             </Border>
 
                             <Grid Grid.Row="2">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Button Grid.Column="0" Content="ACCEPT" Style="{StaticResource OvalActionButton}"/>
-                                <Button Grid.Column="1" Content="DENY" Style="{StaticResource OvalActionButton}" Click="CancelAutoMatch_Click"/>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Content="ACCEPT" Style="{StaticResource OvalActionButton}" Click="AcceptWarning_Click"/>
+                                <Button Grid.Column="1" Content="DENY" Style="{StaticResource OvalActionButton}" Click="DenyWarning_Click"/>
                             </Grid>
                         </Grid>
                     </Border>
@@ -426,42 +336,31 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <Border Grid.Row="0" BorderBrush="#111111" BorderThickness="4" Padding="8" Margin="0,0,0,10">
-                                <TextBlock Text="!AUTO!" FontSize="52" FontFamily="Segoe Script" HorizontalAlignment="Center"/>
+                            <Border Grid.Row="0" BorderBrush="#FFD700" BorderThickness="3" Padding="8" Margin="0,0,0,10">
+                                <TextBlock Text="!AUTO!" FontSize="46" FontFamily="Segoe Script" HorizontalAlignment="Center"/>
                             </Border>
 
                             <TextBox Grid.Row="1" Text="{Binding ScanRoot, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBox Grid.Row="2" Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}"/>
                             <TextBox Grid.Row="3" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged, Delay=300}"/>
 
-                            <Grid Grid.Row="4" Margin="0,4,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="260"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border Grid.Column="0" BorderBrush="#111111" BorderThickness="4" Height="90" Background="White"/>
-                                <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                    <TextBlock Text="Levenshtein threshold" FontSize="30" FontFamily="Segoe UI Black"/>
-                                    <Slider Minimum="0" Maximum="6" Value="{Binding MatchThreshold, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="1"/>
-                                </StackPanel>
-                            </Grid>
+                            <StackPanel Grid.Row="4" Margin="0,8,0,8">
+                                <TextBlock Text="Levenshtein threshold" FontSize="22" FontFamily="Segoe UI Black"/>
+                                <Slider Minimum="0" Maximum="6" Value="{Binding MatchThreshold, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="1"/>
+                                <TextBlock Text="{Binding MatchThreshold}" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{Binding AutoProgressText}" Foreground="#BBBBBB" Margin="0,8,0,0"/>
+                            </StackPanel>
 
-                            <TextBlock Grid.Row="5" Text="{Binding AutoProgressText}" FontSize="16" Foreground="#333" Margin="0,0,0,8"/>
-                            <ProgressBar Grid.Row="6" Height="20" IsIndeterminate="{Binding IsAutoRunning}" Margin="0,0,0,12"/>
+                            <ProgressBar Grid.Row="5" Height="18" IsIndeterminate="{Binding IsAutoRunning}" Margin="0,0,0,12"/>
 
-                            <Grid Grid.Row="7">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Button Grid.Column="0" Content="DRY RUN" Style="{StaticResource OvalActionButton}"/>
-                                <Button Grid.Column="1" Content="RUN AUTO" Style="{StaticResource OvalActionButton}" Click="RunAutoMatch_Click"
-                                        IsEnabled="{Binding IsAutoRunning, Converter={StaticResource InverseBooleanConverter}}"/>
+                            <Grid Grid.Row="6">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <Button Grid.Column="0" Content="DRY RUN" Style="{StaticResource OvalActionButton}" IsEnabled="False"/>
+                                <Button Grid.Column="1" Content="RUN AUTO" Style="{StaticResource OvalActionButton}" Click="RunAutoMatch_Click" IsEnabled="{Binding IsAutoRunning, Converter={StaticResource InverseBooleanConverter}}"/>
                             </Grid>
                         </Grid>
                     </Border>
@@ -469,8 +368,8 @@
             </TabItem>
         </TabControl>
 
-        <Border Grid.Row="2" BorderBrush="#111111" BorderThickness="4" Background="White" Padding="10" Margin="6,8,6,0">
-            <TextBlock Text="{Binding StatusMessage}" FontSize="18" FontFamily="Segoe UI Semibold"/>
+        <Border Grid.Row="2" BorderBrush="#FFD700" BorderThickness="3" Background="#111111" Padding="10" Margin="6,8,6,0">
+            <TextBlock Text="{Binding StatusMessage}" FontSize="16" FontFamily="Segoe UI Semibold"/>
         </Border>
     </Grid>
 </Window>
