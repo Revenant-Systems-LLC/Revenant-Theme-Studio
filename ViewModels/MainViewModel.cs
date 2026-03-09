@@ -29,6 +29,7 @@ namespace Revenant_Theme_Studio.ViewModels
 
         private bool _isAutoRunning;
         private string _autoProgressText = string.Empty;
+        private bool _isAutoWarningAccepted;
 
         private CancellationTokenSource? _autoCts;
 
@@ -100,12 +101,19 @@ namespace Revenant_Theme_Studio.ViewModels
             set { _autoProgressText = value; OnPropertyChanged(); }
         }
 
+        public bool IsAutoWarningAccepted
+        {
+            get => _isAutoWarningAccepted;
+            set { _isAutoWarningAccepted = value; OnPropertyChanged(); }
+        }
+
         public MainViewModel()
         {
             // start empty; user selects a library folder
             _matchingService.SetIconFolders();
             SystemResourcePath = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\SystemResources\imageres.dll.mun");
             ReloadIcons();
+            IsAutoWarningAccepted = false;
         }
 
         public void ReloadIcons()
@@ -196,6 +204,12 @@ namespace Revenant_Theme_Studio.ViewModels
         public async Task RunAutoMatchAsync()
         {
             if (IsAutoRunning) return;
+
+            if (!IsAutoWarningAccepted)
+            {
+                StatusMessage = "Auto mode is locked. Accept the warning page before running auto operations.";
+                return;
+            }
 
             if (string.IsNullOrWhiteSpace(ScanRoot) || !Directory.Exists(ScanRoot))
             {

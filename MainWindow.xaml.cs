@@ -66,12 +66,45 @@ namespace Revenant_Theme_Studio
 
         private async void RunAutoMatch_Click(object sender, RoutedEventArgs e)
         {
+            if (!ViewModel.IsAutoWarningAccepted)
+            {
+                ViewModel.StatusMessage = "Accept the warning page before using auto mode.";
+                MainTabs.SelectedIndex = 3;
+                return;
+            }
+
             await ViewModel.RunAutoMatchAsync();
         }
 
         private void CancelAutoMatch_Click(object sender, RoutedEventArgs e)
         {
             ViewModel.CancelAutoMatch();
+        }
+
+        private void IntroNavigate_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement { Tag: string tagValue })
+                return;
+
+            if (!int.TryParse(tagValue, out var tabIndex))
+                return;
+
+            MainTabs.SelectedIndex = tabIndex;
+        }
+
+        private void AcceptWarning_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.IsAutoWarningAccepted = true;
+            ViewModel.StatusMessage = "Warning accepted. Configure auto mode and run when ready.";
+            MainTabs.SelectedIndex = 1;
+        }
+
+        private void DenyWarning_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.IsAutoWarningAccepted = false;
+            ViewModel.CancelAutoMatch();
+            ViewModel.StatusMessage = "Auto/registry flow denied.";
+            MainTabs.SelectedIndex = 0;
         }
     }
 }
