@@ -17,3 +17,4 @@ C:\The-Ossuary\Revenant-Systems\Projects\Revenant-Theme-Studio\obj\Debug\net8.0-
 C:\The-Ossuary\Revenant-Systems\Projects\Revenant-Theme-Studio\obj\Debug\net8.0-windows\Revenant-Theme-Studio.pdb
 C:\The-Ossuary\Revenant-Systems\Projects\Revenant-Theme-Studio\obj\Debug\net8.0-windows\Revenant-Theme-Studio.genruntimeconfig.cache
 C:\The-Ossuary\Revenant-Systems\Projects\Revenant-Theme-Studio\obj\Debug\net8.0-windows\ref\Revenant-Theme-Studio.dll
+C:\The-Ossuary\Revenant-Systems\Projects\Revenant-Theme-Studio\obj\Debug\net8.0-windows\Revenant-Theme-Studio.sourcelink.json

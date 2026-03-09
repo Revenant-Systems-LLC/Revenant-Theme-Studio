@@ -51,41 +51,44 @@ namespace Revenant_Theme_Studio.Services
 
         public string? FindBestMatch(string name, int maxDistance)
         {
-            var all = GetAllIcons();
-            if (all.Count == 0) return null;
+                var all = GetAllIcons();
+                if (all.Count == 0) return null;
 
-            var needle = Normalize(name);
+                var needle = Normalize(name);
 
             // 1) exact
-            var exact = all.FirstOrDefault(p => Normalize(Path.GetFileNameWithoutExtension(p)) == needle);
-            if (exact != null) return exact;
+                var exact = all.FirstOrDefault(p => Normalize(Path.GetFileNameWithoutExtension(p)) == needle);
+                if (exact != null) return exact;
 
-            // 2) contains
-            var contains = all.FirstOrDefault(p =>
-            {
-                var iconName = Normalize(Path.GetFileNameWithoutExtension(p));
-                return iconName.Contains(needle) || needle.Contains(iconName);
-            });
-            if (contains != null) return contains;
-
-            // 3) levenshtein best <= threshold
-            (string path, int dist)? best = null;
-            foreach (var p in all)
+            // 2) levenshtein best <= threshold
+                (string path, int dist)? best = null;
+                foreach (var p in all)
             {
                 var iconName = Normalize(Path.GetFileNameWithoutExtension(p));
                 var d = Levenshtein(needle, iconName);
                 if (d <= maxDistance && (best == null || d < best.Value.dist))
-                    best = (p, d);
+                best = (p, d);
             }
 
-            return best?.path;
+                return best?.path;
         }
 
         private static string Normalize(string s)
         {
             s = s.Trim().ToLowerInvariant();
-            var chars = s.Where(char.IsLetterOrDigit).ToArray();
-            return new string(chars);
+
+            var sb = new System.Text.StringBuilder();
+            foreach (var ch in s)
+            {
+                sb.Append(char.IsLetterOrDigit(ch) ? ch : ' ');
+            }
+
+            var normalized = string.Join(" ",
+                sb.ToString()
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Where(part => !int.TryParse(part, out _))); // strips pure years like 2023
+
+            return normalized;
         }
 
         private static int Levenshtein(string a, string b)
