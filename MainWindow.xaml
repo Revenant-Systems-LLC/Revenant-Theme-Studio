@@ -106,7 +106,7 @@
                             <UniformGrid Grid.Row="1" Columns="2" Rows="6" Margin="50,10,50,10">
                                 <Button Content="folder-icons" Click="IntroNavigate_Click" Tag="1"/>
                                 <Button Content="system icons" Click="IntroNavigate_Click" Tag="2"/>
-                                <Button Content="drive icons" Click="IntroNavigate_Click" Tag="1"/>
+                                <Button Content="drive icons" Click="IntroNavigate_Click" Tag="3"/>
                                 <Button Content="registry edits" Click="IntroNavigate_Click" Tag="3"/>
                                 <Button Content="icon editor" Click="IntroNavigate_Click" Tag="2"/>
                                 <Button Content="dual screen" IsEnabled="False"/>
@@ -199,18 +199,19 @@
 
                             <Grid Grid.Row="1">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" Text="{Binding ScanRoot, UpdateSourceTrigger=PropertyChanged}"/>
-                                <Button Grid.Column="1" Content="..." Width="60" Click="BrowseScanRoot_Click"/>
+                                <TextBox Grid.Column="0" Text="{Binding ScanRoot, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsAutoWarningAccepted}"/>
+                                <Button Grid.Column="1" Content="..." Width="60" Click="BrowseScanRoot_Click" IsEnabled="{Binding IsAutoWarningAccepted}"/>
                             </Grid>
 
                             <Border Grid.Row="2" BorderBrush="#FFD700" BorderThickness="3" Padding="10" Margin="0,10,0,8">
                                 <StackPanel>
                                     <TextBlock Text="Match Threshold (Levenshtein)" FontFamily="Segoe UI Semibold" FontSize="18"/>
                                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                        <Slider Minimum="0" Maximum="6" Value="{Binding MatchThreshold, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="1" Width="280"/>
+                                        <Slider Minimum="0" Maximum="6" Value="{Binding MatchThreshold, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="1" Width="280" IsEnabled="{Binding IsAutoWarningAccepted}"/>
                                         <TextBlock Text="{Binding MatchThreshold}" Margin="10,0,0,0" VerticalAlignment="Center"/>
                                     </StackPanel>
                                     <TextBlock Text="{Binding AutoProgressText}" Foreground="#BBBBBB" Margin="0,8,0,0"/>
+                                    <TextBlock Text="Accept warning page to unlock auto mode." Foreground="#BBBBBB"/>
                                     <ProgressBar Height="16" Margin="0,8,0,0" IsIndeterminate="{Binding IsAutoRunning}"/>
                                 </StackPanel>
                             </Border>
@@ -221,8 +222,8 @@
 
                             <Grid Grid.Row="4">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                                <Button Grid.Column="0" Content="RUN AUTO" Style="{StaticResource OvalActionButton}" Click="RunAutoMatch_Click" IsEnabled="{Binding IsAutoRunning, Converter={StaticResource InverseBooleanConverter}}"/>
-                                <Button Grid.Column="1" Content="CANCEL" Style="{StaticResource OvalActionButton}" Click="CancelAutoMatch_Click" IsEnabled="{Binding IsAutoRunning}"/>
+                                <Button Grid.Column="0" Content="RUN AUTO" Style="{StaticResource OvalActionButton}" Click="RunAutoMatch_Click" IsEnabled="{Binding IsAutoWarningAccepted}"/>
+                                <Button Grid.Column="1" Content="CANCEL" Style="{StaticResource OvalActionButton}" Click="CancelAutoMatch_Click" IsEnabled="{Binding IsAutoWarningAccepted}"/>
                             </Grid>
                         </Grid>
                     </Border>
@@ -344,13 +345,13 @@
                                 <TextBlock Text="!AUTO!" FontSize="46" FontFamily="Segoe Script" HorizontalAlignment="Center"/>
                             </Border>
 
-                            <TextBox Grid.Row="1" Text="{Binding ScanRoot, UpdateSourceTrigger=PropertyChanged}"/>
-                            <TextBox Grid.Row="2" Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}"/>
-                            <TextBox Grid.Row="3" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged, Delay=300}"/>
+                            <TextBox Grid.Row="1" Text="{Binding ScanRoot, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsAutoWarningAccepted}"/>
+                            <TextBox Grid.Row="2" Text="{Binding SelectedFolder, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IsAutoWarningAccepted}"/>
+                            <TextBox Grid.Row="3" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged, Delay=300}" IsEnabled="{Binding IsAutoWarningAccepted}"/>
 
                             <StackPanel Grid.Row="4" Margin="0,8,0,8">
                                 <TextBlock Text="Levenshtein threshold" FontSize="22" FontFamily="Segoe UI Black"/>
-                                <Slider Minimum="0" Maximum="6" Value="{Binding MatchThreshold, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="1"/>
+                                <Slider Minimum="0" Maximum="6" Value="{Binding MatchThreshold, Mode=TwoWay}" IsSnapToTickEnabled="True" TickFrequency="1" IsEnabled="{Binding IsAutoWarningAccepted}"/>
                                 <TextBlock Text="{Binding MatchThreshold}" HorizontalAlignment="Right"/>
                                 <TextBlock Text="{Binding AutoProgressText}" Foreground="#BBBBBB" Margin="0,8,0,0"/>
                             </StackPanel>
@@ -360,7 +361,7 @@
                             <Grid Grid.Row="6">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                 <Button Grid.Column="0" Content="DRY RUN" Style="{StaticResource OvalActionButton}" IsEnabled="False"/>
-                                <Button Grid.Column="1" Content="RUN AUTO" Style="{StaticResource OvalActionButton}" Click="RunAutoMatch_Click" IsEnabled="{Binding IsAutoRunning, Converter={StaticResource InverseBooleanConverter}}"/>
+                                <Button Grid.Column="1" Content="RUN AUTO" Style="{StaticResource OvalActionButton}" Click="RunAutoMatch_Click" IsEnabled="{Binding IsAutoWarningAccepted}"/>
                             </Grid>
                         </Grid>
                     </Border>
