@@ -2,11 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Revenant_Theme_Studio.Models;
 
 namespace Revenant_Theme_Studio.Services
 {
     public class IconMatchingService
     {
+        private static readonly string[] ReservedTokens = ["default", "thumb", "open", "froint", "backdefault"];
+
         private string[] _iconFolders = Array.Empty<string>();
         private List<string> _cachedIcons = new();
         private bool _dirty = true;
@@ -31,64 +34,111 @@ namespace Revenant_Theme_Studio.Services
             if (!_dirty) return _cachedIcons;
 
             var results = new List<string>();
-
             foreach (var folder in _iconFolders)
             {
                 if (!Directory.Exists(folder)) continue;
-
-                results.AddRange(
-                    Directory.GetFiles(folder, "*.ico", SearchOption.AllDirectories)
-                );
+                results.AddRange(Directory.GetFiles(folder, "*.ico", SearchOption.AllDirectories));
             }
 
-            _cachedIcons = results
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
+            _cachedIcons = results.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             _dirty = false;
             return _cachedIcons;
         }
 
-        public string? FindBestMatch(string name, int maxDistance)
+        public MatchDecision FindBestMatch(string name, MatchStrictness strictness)
         {
-                var all = GetAllIcons();
-                if (all.Count == 0) return null;
-
-                var needle = Normalize(name);
-
-            // 1) exact
-                var exact = all.FirstOrDefault(p => Normalize(Path.GetFileNameWithoutExtension(p)) == needle);
-                if (exact != null) return exact;
-
-            // 2) levenshtein best <= threshold
-                (string path, int dist)? best = null;
-                foreach (var p in all)
+            var all = GetCandidateIcons();
+            if (all.Count == 0)
             {
-                var iconName = Normalize(Path.GetFileNameWithoutExtension(p));
-                var d = Levenshtein(needle, iconName);
-                if (d <= maxDistance && (best == null || d < best.Value.dist))
-                best = (p, d);
+                return new MatchDecision { Strength = MatchStrength.None, Reason = "No icon candidates available." };
             }
 
-                return best?.path;
+            var needle = Normalize(name);
+            if (string.IsNullOrWhiteSpace(needle))
+            {
+                return new MatchDecision { Strength = MatchStrength.None, Reason = "Folder name is not matchable after normalization." };
+            }
+
+            var exact = all.FirstOrDefault(p => Normalize(Path.GetFileNameWithoutExtension(p)).Equals(needle, StringComparison.Ordinal));
+            if (exact != null)
+            {
+                return new MatchDecision { Strength = MatchStrength.Strong, IconPath = exact, Reason = "Exact normalized match." };
+            }
+
+            var scored = all
+                .Select(path =>
+                {
+                    var iconName = Normalize(Path.GetFileNameWithoutExtension(path));
+                    var distance = Levenshtein(needle, iconName);
+                    var maxLen = Math.Max(needle.Length, iconName.Length);
+                    var normalizedDistance = maxLen == 0 ? 1.0 : (double)distance / maxLen;
+                    return new { path, distance, normalizedDistance };
+                })
+                .OrderBy(x => x.normalizedDistance)
+                .ThenBy(x => x.distance)
+                .Take(2)
+                .ToList();
+
+            if (scored.Count == 0)
+            {
+                return new MatchDecision { Strength = MatchStrength.None, Reason = "No ranked candidates." };
+            }
+
+            var best = scored[0];
+            var limit = strictness switch
+            {
+                MatchStrictness.Strict => 0.15,
+                MatchStrictness.Balanced => 0.22,
+                _ => 0.30
+            };
+
+            var lengthAwareAbsoluteLimit = Math.Max(1, needle.Length / 4);
+            var withinSafeRange = best.normalizedDistance <= limit && best.distance <= lengthAwareAbsoluteLimit;
+            if (!withinSafeRange)
+            {
+                return new MatchDecision
+                {
+                    Strength = MatchStrength.None,
+                    Reason = $"Best candidate is too far from '{name}'.",
+                    IconPath = best.path
+                };
+            }
+
+            if (scored.Count > 1)
+            {
+                var second = scored[1];
+                if (Math.Abs(second.normalizedDistance - best.normalizedDistance) < 0.03)
+                {
+                    return new MatchDecision
+                    {
+                        Strength = MatchStrength.Weak,
+                        IconPath = best.path,
+                        Reason = "Top candidates are too close, match is ambiguous."
+                    };
+                }
+            }
+
+            return new MatchDecision { Strength = MatchStrength.Strong, IconPath = best.path, Reason = "Best safe near-match." };
+        }
+
+        private List<string> GetCandidateIcons()
+        {
+            return GetAllIcons()
+                .Where(path =>
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(path).ToLowerInvariant();
+                    return !ReservedTokens.Any(token => fileName.Contains(token, StringComparison.Ordinal));
+                })
+                .ToList();
         }
 
         private static string Normalize(string s)
         {
             s = s.Trim().ToLowerInvariant();
-
-            var sb = new System.Text.StringBuilder();
-            foreach (var ch in s)
-            {
-                sb.Append(char.IsLetterOrDigit(ch) ? ch : ' ');
-            }
-
-            var normalized = string.Join(" ",
-                sb.ToString()
+            var chars = s.Select(ch => char.IsLetterOrDigit(ch) ? ch : ' ').ToArray();
+            return string.Join(" ", new string(chars)
                 .Split(' ', StringSplitOptions.RemoveEmptyEntries)
-                .Where(part => !int.TryParse(part, out _))); // strips pure years like 2023
-
-            return normalized;
+                .Where(part => !int.TryParse(part, out _)));
         }
 
         private static int Levenshtein(string a, string b)
@@ -97,18 +147,15 @@ namespace Revenant_Theme_Studio.Services
             if (b.Length == 0) return a.Length;
 
             var dp = new int[a.Length + 1, b.Length + 1];
-            for (int i = 0; i <= a.Length; i++) dp[i, 0] = i;
-            for (int j = 0; j <= b.Length; j++) dp[0, j] = j;
+            for (var i = 0; i <= a.Length; i++) dp[i, 0] = i;
+            for (var j = 0; j <= b.Length; j++) dp[0, j] = j;
 
-            for (int i = 1; i <= a.Length; i++)
+            for (var i = 1; i <= a.Length; i++)
             {
-                for (int j = 1; j <= b.Length; j++)
+                for (var j = 1; j <= b.Length; j++)
                 {
-                    int cost = a[i - 1] == b[j - 1] ? 0 : 1;
-                    dp[i, j] = Math.Min(
-                        Math.Min(dp[i - 1, j] + 1, dp[i, j - 1] + 1),
-                        dp[i - 1, j - 1] + cost
-                    );
+                    var cost = a[i - 1] == b[j - 1] ? 0 : 1;
+                    dp[i, j] = Math.Min(Math.Min(dp[i - 1, j] + 1, dp[i, j - 1] + 1), dp[i - 1, j - 1] + cost);
                 }
             }
 
