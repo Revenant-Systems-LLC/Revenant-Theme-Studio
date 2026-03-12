@@ -67,9 +67,9 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Revenant Theme Studio" FontSize="42" FontWeight="Bold" Margin="0,0,0,10"/>
+        <TextBlock Text="Revenant Theme Studio" FontSize="28" FontWeight="SemiBold" Margin="0,0,0,10"/>
 
-        <TabControl Grid.Row="1" Background="#0D0D0D" BorderBrush="#FFD700">
+        <TabControl Grid.Row="1">
             <TabItem Header="Folder Icons">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
@@ -114,15 +114,38 @@
                                     <DataTemplate>
                                         <StackPanel Width="96" Margin="6" HorizontalAlignment="Center">
                                             <Image Width="42" Height="42" Source="{Binding PreviewImage}" HorizontalAlignment="Center"/>
+                    <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+                        <TextBlock Text="Icon Library:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox Width="650" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Content="Browse" Margin="8,0,0,0" Click="BrowseIconFolder_Click"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,8">
+                        <TextBlock Text="Selected Folder:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox Width="650" Text="{Binding SelectedFolder}" IsReadOnly="True"/>
+                        <Button Content="Browse" Margin="8,0,0,0" Click="BrowseTargetFolder_Click"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="2" Grid.Column="0" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="0,0,6,0">
+                        <StackPanel>
+                            <TextBlock Text="Icon Library" FontWeight="Bold"/>
+                            <ListBox Height="430" ItemsSource="{Binding IconList}" SelectedItem="{Binding SelectedIcon}">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Width="80" Margin="4">
+                                            <Image Width="42" Height="42" Source="{Binding PreviewImage}"/>
                                             <TextBlock Text="{Binding DisplayName}" FontSize="10" TextWrapping="Wrap" TextAlignment="Center"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
-                        </DockPanel>
+                        </StackPanel>
                     </Border>
 
-                    <Border Grid.Row="3" Grid.Column="1" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="6,0,0,0">
+                    <Border Grid.Row="2" Grid.Column="1" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="6,0,0,0">
                         <StackPanel>
                             <TextBlock Text="Selected Folder" FontWeight="Bold"/>
                             <TextBlock Text="{Binding SelectedFolder}" TextWrapping="Wrap" Margin="0,0,0,8"/>
@@ -132,7 +155,7 @@
                             <Image Width="96" Height="96" Source="{Binding SelectedIcon.PreviewImage}" Margin="0,6,0,8"/>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="Apply" Width="140" Click="ApplyFolderIcon_Click"/>
-                                <Button Content="Undo / Restore" Width="180" Click="UndoLastChange_Click"/>
+                                <Button Content="Undo / Restore" Width="180" Margin="8,0,0,0" Click="UndoLastChange_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -149,7 +172,7 @@
                     <Image Width="96" Height="96" Source="{Binding SelectedIcon.PreviewImage}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                         <Button Content="Apply" Width="140" Click="ApplyDriveIcon_Click"/>
-                        <Button Content="Undo / Restore" Width="180" Click="UndoLastChange_Click"/>
+                        <Button Content="Undo / Restore" Width="180" Margin="8,0,0,0" Click="UndoLastChange_Click"/>
                     </StackPanel>
                 </StackPanel>
             </TabItem>
@@ -161,18 +184,18 @@
                         <TextBlock Text="Scan Root"/>
                         <StackPanel Orientation="Horizontal">
                             <TextBox Width="500" Text="{Binding ScanRoot}"/>
-                            <Button Content="Browse" Click="BrowseScanRoot_Click"/>
+                            <Button Content="Browse" Margin="8,0,0,0" Click="BrowseScanRoot_Click"/>
                         </StackPanel>
                         <TextBlock Text="Matching Mode: Strict (conservative)" Margin="0,8,0,0"/>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <Button Content="Run Auto Match" Width="160" Click="RunAutoMatch_Click"/>
-                            <Button Content="Cancel" Width="110" Click="CancelAutoMatch_Click"/>
+                            <Button Content="Cancel" Width="110" Margin="8,0,0,0" Click="CancelAutoMatch_Click"/>
                         </StackPanel>
                         <TextBlock Text="{Binding AutoProgressText}" Margin="0,8,0,0"/>
                     </StackPanel>
                     <Grid Grid.Column="1">
                         <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                        <GroupBox Header="Applied Automatically">
+                        <GroupBox Header="Applied Automatically" Margin="0,0,0,6">
                             <ListBox ItemsSource="{Binding AppliedAutomatically}" DisplayMemberPath="FolderName"/>
                         </GroupBox>
                         <Grid Grid.Row="1">
@@ -202,7 +225,7 @@
                     <Image Width="96" Height="96" Source="{Binding SelectedIcon.PreviewImage}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                         <Button Content="Apply" Width="140" Click="ApplyShellIcon_Click"/>
-                        <Button Content="Restore Default" Width="140" Click="RestoreShellDefault_Click"/>
+                        <Button Content="Restore Default" Width="140" Margin="8,0,0,0" Click="RestoreShellDefault_Click"/>
                     </StackPanel>
                     <TextBlock Text="{Binding AdvancedNote}" Margin="0,14,0,0" TextWrapping="Wrap"/>
                 </StackPanel>
@@ -210,7 +233,7 @@
 
             <TabItem Header="Help">
                 <TextBlock Margin="12" TextWrapping="Wrap"
-                           Text="RTS is conservative by default: exact/safe matches only, weak guesses rejected, and safe fallback icons used when no match is trustworthy. Use Restore to undo changes."/>
+                           Text="RTS is designed to be conservative: exact/safe matches are applied automatically; weak matches are not. Use Restore to undo changes. Advanced features are fenced and use HKCU overrides by default."/>
             </TabItem>
         </TabControl>
 

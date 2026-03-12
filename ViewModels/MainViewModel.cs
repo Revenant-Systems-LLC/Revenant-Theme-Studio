@@ -51,8 +51,7 @@ namespace Revenant_Theme_Studio.ViewModels
         {
             _historyService = new ChangeHistoryService(_storageService);
             _matchingService.SetIconFolders();
-            SystemResourcePath = string.Empty;
-            IncludeSystemIcons = false;
+            SystemResourcePath = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\SystemResources\imageres.dll.mun");
             ShellTargets = new ObservableCollection<string>(_shellIconService.Targets.Keys.OrderBy(x => x));
             ReloadIcons();
         }
@@ -104,7 +103,7 @@ namespace Revenant_Theme_Studio.ViewModels
             }
 
             StatusMessage = loadedFromFolders == 0 && loadedFromSystemResource == 0
-                ? "No icons were loaded. Select an icon folder. System icons are optional."
+                ? "No icons were loaded. Select an icon folder and/or system resource path."
                 : $"Loaded {loadedFromFolders} file icons and {loadedFromSystemResource} system icons.";
         }
 
