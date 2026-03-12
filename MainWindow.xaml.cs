@@ -31,6 +31,32 @@ namespace Revenant_Theme_Studio
             }
         }
 
+        private void BrowseSystemResource_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "Select System Icon Resource",
+                Filter = "MUI Resource (*.mun;*.dll)|*.mun;*.dll|All Files (*.*)|*.*",
+                CheckFileExists = true,
+                Multiselect = false
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                ViewModel.SystemResourcePath = dialog.FileName;
+                ViewModel.ReloadIcons();
+            }
+        }
+
+        private void BrowseTargetFolder_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFolderDialog { Title = "Select Folder" };
+            if (dialog.ShowDialog() == true)
+            {
+                ViewModel.SelectedFolder = dialog.FolderName;
+            }
+        }
+
         private void BrowseScanRoot_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFolderDialog { Title = "Select Auto Match Root" };

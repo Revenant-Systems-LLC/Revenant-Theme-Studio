@@ -30,6 +30,7 @@ namespace Revenant_Theme_Studio.ViewModels
         private IconChoice? _selectedIcon;
         private string _statusMessage = "Ready.";
         private string _systemResourcePath = string.Empty;
+        private bool _includeSystemIcons;
         private string _scanRoot = string.Empty;
         private bool _isAutoRunning;
         private string _autoProgressText = string.Empty;
@@ -57,6 +58,7 @@ namespace Revenant_Theme_Studio.ViewModels
 
         public string IconFolder { get => _iconFolder; set { _iconFolder = value; OnPropertyChanged(); _matchingService.SetIconFolders(_iconFolder); ReloadIcons(); } }
         public string SystemResourcePath { get => _systemResourcePath; set { _systemResourcePath = value; OnPropertyChanged(); } }
+        public bool IncludeSystemIcons { get => _includeSystemIcons; set { _includeSystemIcons = value; OnPropertyChanged(); ReloadIcons(); } }
         public string SelectedFolder { get => _selectedFolder; set { _selectedFolder = value; OnPropertyChanged(); OnPropertyChanged(nameof(CurrentFolderIconReference)); } }
         public IconChoice? SelectedIcon { get => _selectedIcon; set { _selectedIcon = value; OnPropertyChanged(); } }
         public string StatusMessage { get => _statusMessage; set { _statusMessage = value; OnPropertyChanged(); } }
@@ -91,7 +93,7 @@ namespace Revenant_Theme_Studio.ViewModels
                 }
             }
 
-            if (!string.IsNullOrWhiteSpace(SystemResourcePath) && File.Exists(SystemResourcePath))
+            if (IncludeSystemIcons && !string.IsNullOrWhiteSpace(SystemResourcePath) && File.Exists(SystemResourcePath))
             {
                 foreach (var iconChoice in _systemIconService.LoadIcons(SystemResourcePath))
                 {

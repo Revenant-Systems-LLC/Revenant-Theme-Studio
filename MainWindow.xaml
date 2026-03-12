@@ -5,13 +5,60 @@
         Title="Revenant Theme Studio"
         Height="860"
         Width="1320"
-        Background="#111"
-        Foreground="#F0F0F0"
+        Background="#0D0D0D"
+        Foreground="#FFD700"
         WindowStartupLocation="CenterScreen">
 
     <Window.DataContext>
         <vm:MainViewModel/>
     </Window.DataContext>
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="#1A1A1A"/>
+            <Setter Property="Foreground" Value="#FFD700"/>
+            <Setter Property="BorderBrush" Value="#FFD700"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Margin" Value="4,0,0,0"/>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="#1A1A1A"/>
+            <Setter Property="Foreground" Value="#FFD700"/>
+            <Setter Property="BorderBrush" Value="#FFD700"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="6,4"/>
+        </Style>
+
+        <Style TargetType="ComboBox">
+            <Setter Property="Background" Value="#1A1A1A"/>
+            <Setter Property="Foreground" Value="#FFD700"/>
+            <Setter Property="BorderBrush" Value="#FFD700"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#FFD700"/>
+        </Style>
+
+        <Style TargetType="ListBox">
+            <Setter Property="Background" Value="#111111"/>
+            <Setter Property="Foreground" Value="#FFD700"/>
+            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+        </Style>
+
+        <Style TargetType="GroupBox">
+            <Setter Property="BorderBrush" Value="#444"/>
+            <Setter Property="Foreground" Value="#FFD700"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+            <Setter Property="Padding" Value="6"/>
+        </Style>
+    </Window.Resources>
 
     <Grid Margin="12">
         <Grid.RowDefinitions>
@@ -28,6 +75,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
@@ -35,6 +83,37 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
+                    <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Icon Library:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox Width="640" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged}"/>
+                        <Button Content="Browse" Click="BrowseIconFolder_Click"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,0" VerticalAlignment="Center">
+                        <CheckBox Content="Include Windows system icons" IsChecked="{Binding IncludeSystemIcons}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <TextBox Width="500" Text="{Binding SystemResourcePath, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IncludeSystemIcons}"/>
+                        <Button Content="Browse" Click="BrowseSystemResource_Click" IsEnabled="{Binding IncludeSystemIcons}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,8">
+                        <TextBlock Text="Selected Folder:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox Width="640" Text="{Binding SelectedFolder}" IsReadOnly="True"/>
+                        <Button Content="Browse" Click="BrowseTargetFolder_Click"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="3" Grid.Column="0" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="0,0,6,0">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Icon Library" FontWeight="Bold" Margin="0,0,0,8"/>
+                            <ListBox ItemsSource="{Binding IconList}" SelectedItem="{Binding SelectedIcon}">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="6"/>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Width="96" Margin="6" HorizontalAlignment="Center">
+                                            <Image Width="42" Height="42" Source="{Binding PreviewImage}" HorizontalAlignment="Center"/>
                     <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal">
                         <TextBlock Text="Icon Library:" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBox Width="650" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged}"/>
