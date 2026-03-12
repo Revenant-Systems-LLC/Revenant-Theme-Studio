@@ -7,7 +7,8 @@
         Width="1320"
         Background="#0D0D0D"
         Foreground="#FFD700"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Icon="IconEngine/icons/Logos/_Damien_ICON.ico">
 
     <Window.DataContext>
         <vm:MainViewModel/>

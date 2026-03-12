@@ -9,10 +9,13 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>IconEngine\icons\Logos\_Damien_ICON.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="IconEngine\**\*" />
+    <None Remove="IconEngine\icons\Logos\_Damien_ICON.ico" />
+    <Resource Include="IconEngine\icons\Logos\_Damien_ICON.ico" />
   </ItemGroup>
 
 </Project>
