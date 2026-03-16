@@ -9,3 +9,22 @@ sites/site*/public/theme/
 textpattern/
 HISTORY.txt
 README.txt
+
+# Ignore build outputs and IDE/VS caches
+bin/
+obj/
+**/bin/
+**/obj/
+
+# User-specific files and IDE folders
+*.user
+*.suo
+.vs/
+
+# Temporary and log files
+*.tmp
+*.log
+
+# Test utilities and data not meant for shipping
+IconEngine/Program.cs
+IconEngine/test-data/
