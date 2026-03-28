@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
+using System.Windows.Controls.Primitives;
 using Microsoft.Win32;
 using Revenant_Theme_Studio.ViewModels;
 
@@ -11,6 +13,12 @@ namespace Revenant_Theme_Studio
         public MainWindow()
         {
             InitializeComponent();
+            Closed += OnClosed;
+        }
+
+        private void OnClosed(object? sender, EventArgs e)
+        {
+            ViewModel.Dispose();
         }
 
         private void BrowseIconFolder_Click(object sender, RoutedEventArgs e)
@@ -31,48 +39,29 @@ namespace Revenant_Theme_Studio
             }
         }
 
-        private void BrowseSystemResource_Click(object sender, RoutedEventArgs e)
+        private void BrowseWallpaperSource_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog
-            {
-                Title = "Select System Icon Resource",
-                Filter = "MUI Resource (*.mun;*.dll)|*.mun;*.dll|All Files (*.*)|*.*",
-                CheckFileExists = true,
-                Multiselect = false
-            };
-
+            var dialog = new OpenFolderDialog { Title = "Select Wallpaper Source Folder" };
             if (dialog.ShowDialog() == true)
             {
-                ViewModel.SystemResourcePath = dialog.FileName;
-                ViewModel.ReloadIcons();
-            }
-        }
-
-        private void BrowseTargetFolder_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFolderDialog { Title = "Select Folder" };
-            if (dialog.ShowDialog() == true)
-            {
-                ViewModel.SelectedFolder = dialog.FolderName;
-            }
-        }
-
-        private void BrowseScanRoot_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFolderDialog { Title = "Select Auto Match Root" };
-            if (dialog.ShowDialog() == true)
-            {
-                ViewModel.ScanRoot = dialog.FolderName;
+                ViewModel.Wallpaper.LocalSourcePath = dialog.FolderName;
             }
         }
 
         private void ApplyFolderIcon_Click(object sender, RoutedEventArgs e) => ViewModel.ApplyFolderIcon();
-        private void ApplyDriveIcon_Click(object sender, RoutedEventArgs e) => ViewModel.ApplyDriveIcon();
-        private void ApplyShellIcon_Click(object sender, RoutedEventArgs e) => ViewModel.ApplyShellIcon();
         private void UndoLastChange_Click(object sender, RoutedEventArgs e) => ViewModel.UndoLastChange();
-        private void RestoreShellDefault_Click(object sender, RoutedEventArgs e) => ViewModel.RestoreSelectedShellDefault();
 
-        private async void RunAutoMatch_Click(object sender, RoutedEventArgs e) => await ViewModel.RunAutoMatchAsync();
-        private void CancelAutoMatch_Click(object sender, RoutedEventArgs e) => ViewModel.CancelAutoMatch();
+        private void RefreshDisplays_Click(object sender, RoutedEventArgs e) => ViewModel.Wallpaper.RefreshDisplays();
+        private void AssignWallpaperSource_Click(object sender, RoutedEventArgs e) => ViewModel.Wallpaper.AssignLocalFolderToSelectedSlot();
+        private void RunRotationTick_Click(object sender, RoutedEventArgs e) => ViewModel.Wallpaper.RunRotationTick();
+
+        private void DisplayThumb_DragDelta(object sender, DragDeltaEventArgs e)
+        {
+            if (sender is not Thumb thumb || thumb.DataContext is not DisplaySlotViewModel slot) return;
+
+            var newX = Math.Max(0, slot.X + e.HorizontalChange);
+            var newY = Math.Max(0, slot.Y + e.VerticalChange);
+            ViewModel.Wallpaper.UpdateSlotPosition(slot.SlotId, newX, newY);
+        }
     }
 }
