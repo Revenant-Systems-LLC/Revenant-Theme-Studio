@@ -10,13 +10,13 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <ApplicationIcon>IconEngine\icons\Logos\_Damien_ICON.ico</ApplicationIcon>
+    <ApplicationIcon>IconEngine\icons\Logos\RTS2.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="IconEngine\**\*" />
-    <None Remove="IconEngine\icons\Logos\_Damien_ICON.ico" />
-    <Resource Include="IconEngine\icons\Logos\_Damien_ICON.ico" />
+	<Compile Remove="IconEngine\**\*.cs" />
+    <Resource Include="IconEngine\icons\Logos\RTS2.ico" />
+	<None Remove="IconEngine\icons\Logos\RTS2.ico" />
   </ItemGroup>
 
 </Project>

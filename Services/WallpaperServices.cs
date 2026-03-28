@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using System.Threading;
 using System.Windows.Forms;
+using System.Windows.Threading;
 using Revenant_Theme_Studio.Models;
 
 namespace Revenant_Theme_Studio.Services;
@@ -34,7 +34,7 @@ public sealed class DisplayService : IDisplayService
 
     public void RefreshDisplays()
     {
-        var detected = Screen.AllScreens
+        var detected = System.Windows.Forms.Screen.AllScreens
             .OrderBy(s => s.Bounds.X)
             .ThenBy(s => s.Bounds.Y)
             .Take(MaxDisplays)
@@ -133,26 +133,6 @@ public interface ISourceProvider
     IReadOnlyList<string> GetCandidates(WallpaperSource source);
 }
 
-public sealed class LocalFolderSourceProvider : ISourceProvider
-{
-    private static readonly HashSet<string> SupportedExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".png", ".jpg", ".jpeg", ".bmp", ".webp"
-    };
-
-    public SourceType SupportedType => SourceType.Local;
-
-    public IReadOnlyList<string> GetCandidates(WallpaperSource source)
-    {
-        if (!Directory.Exists(source.Location)) return Array.Empty<string>();
-
-        return Directory
-            .EnumerateFiles(source.Location)
-            .Where(path => SupportedExtensions.Contains(Path.GetExtension(path)))
-            .ToList();
-    }
-}
-
 public sealed class WeightResolver
 {
     public WallpaperSource ResolveSource(IReadOnlyList<WallpaperSource> sources, Random random)
@@ -217,7 +197,7 @@ public sealed class RotationEngine : IDisposable
     private readonly WeightResolver _weightResolver;
     private readonly Dictionary<SourceType, ISourceProvider> _providers;
     private readonly Random _random = new();
-    private Timer? _timer;
+    private DispatcherTimer _timer;
 
     public RotationEngine(WallpaperService wallpaperService, WeightResolver weightResolver, IEnumerable<ISourceProvider> providers)
     {
@@ -229,15 +209,22 @@ public sealed class RotationEngine : IDisposable
     public event EventHandler<string>? WallpaperResolved;
 
     public void Start(TimeSpan interval)
-    {
-        _timer ??= new Timer(_ => Tick(), null, interval, interval);
-    }
+	{
+		if (_timer != null) return;
+
+		_timer = new DispatcherTimer();
+		_timer.Interval = interval;
+		_timer.Tick += (s, e) => Tick();
+		_timer.Start();
+	}
 
     public void Stop()
-    {
-        _timer?.Dispose();
-        _timer = null;
-    }
+	{
+		if (_timer == null) return;
+
+		_timer.Stop();
+		_timer = null;
+	}
 
     public void Tick()
     {
