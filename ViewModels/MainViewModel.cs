@@ -13,7 +13,7 @@ using Revenant_Theme_Studio.Services;
 
 namespace Revenant_Theme_Studio.ViewModels
 {
-    public class MainViewModel : INotifyPropertyChanged
+    public class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         private const string DefaultFallbackIconReference = @"%SystemRoot%\System32\shell32.dll,3";
 
@@ -46,6 +46,8 @@ namespace Revenant_Theme_Studio.ViewModels
         public ObservableCollection<AutoMatchResult> UsedDefaultIcon { get; } = new();
         public ObservableCollection<AutoMatchResult> Skipped { get; } = new();
         public ObservableCollection<string> ShellTargets { get; }
+
+        public WallpaperViewModel Wallpaper { get; } = new();
 
         public MainViewModel()
         {
@@ -338,6 +340,12 @@ namespace Revenant_Theme_Studio.ViewModels
                     stack.Push(dir);
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            Wallpaper.Dispose();
+            _autoCts?.Dispose();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

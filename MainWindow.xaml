@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Revenant_Theme_Studio.ViewModels"
         Title="Revenant Theme Studio"
-        Height="860"
-        Width="1320"
+        Height="900"
+        Width="1340"
         Background="#0D0D0D"
         Foreground="#FFD700"
         WindowStartupLocation="CenterScreen"
@@ -31,34 +31,6 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="6,4"/>
         </Style>
-
-        <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="#1A1A1A"/>
-            <Setter Property="Foreground" Value="#FFD700"/>
-            <Setter Property="BorderBrush" Value="#FFD700"/>
-            <Setter Property="BorderThickness" Value="1"/>
-        </Style>
-
-
-        <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="#FFD700"/>
-        </Style>
-
-        <Style TargetType="ListBox">
-            <Setter Property="Background" Value="#111111"/>
-            <Setter Property="Foreground" Value="#FFD700"/>
-            <Setter Property="BorderBrush" Value="#444"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
-        </Style>
-
-        <Style TargetType="GroupBox">
-            <Setter Property="BorderBrush" Value="#444"/>
-            <Setter Property="Foreground" Value="#FFD700"/>
-            <Setter Property="Margin" Value="0,0,0,6"/>
-            <Setter Property="Padding" Value="6"/>
-        </Style>
     </Window.Resources>
 
     <Grid Margin="12">
@@ -76,7 +48,6 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
@@ -84,47 +55,16 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Icon Library:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBox Width="640" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged}"/>
-                        <Button Content="Browse" Click="BrowseIconFolder_Click"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,0" VerticalAlignment="Center">
-                        <CheckBox Content="Include Windows system icons" IsChecked="{Binding IncludeSystemIcons}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBox Width="500" Text="{Binding SystemResourcePath, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IncludeSystemIcons}"/>
-                        <Button Content="Browse" Click="BrowseSystemResource_Click" IsEnabled="{Binding IncludeSystemIcons}"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,8">
-                        <TextBlock Text="Selected Folder:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBox Width="640" Text="{Binding SelectedFolder}" IsReadOnly="True"/>
-                        <Button Content="Browse" Click="BrowseTargetFolder_Click"/>
-                    </StackPanel>
-
-                    <Border Grid.Row="3" Grid.Column="0" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="0,0,6,0">
-                        <DockPanel>
-                            <TextBlock DockPanel.Dock="Top" Text="Icon Library" FontWeight="Bold" Margin="0,0,0,8"/>
-                            <ListBox ItemsSource="{Binding IconList}" SelectedItem="{Binding SelectedIcon}">
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="6"/>
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Width="96" Margin="6" HorizontalAlignment="Center">
-                                            <Image Width="42" Height="42" Source="{Binding PreviewImage}" HorizontalAlignment="Center"/>
                     <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal">
                         <TextBlock Text="Icon Library:" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBox Width="650" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged}"/>
-                        <Button Content="Browse" Margin="8,0,0,0" Click="BrowseIconFolder_Click"/>
+                        <Button Content="Browse" Click="BrowseIconFolder_Click"/>
                     </StackPanel>
 
                     <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,8">
                         <TextBlock Text="Selected Folder:" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBox Width="650" Text="{Binding SelectedFolder}" IsReadOnly="True"/>
-                        <Button Content="Browse" Margin="8,0,0,0" Click="BrowseTargetFolder_Click"/>
+                        <Button Content="Browse" Click="BrowseTargetFolder_Click"/>
                     </StackPanel>
 
                     <Border Grid.Row="2" Grid.Column="0" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="0,0,6,0">
@@ -148,98 +88,95 @@
 
                     <Border Grid.Row="2" Grid.Column="1" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="6,0,0,0">
                         <StackPanel>
-                            <TextBlock Text="Selected Folder" FontWeight="Bold"/>
-                            <TextBlock Text="{Binding SelectedFolder}" TextWrapping="Wrap" Margin="0,0,0,8"/>
                             <TextBlock Text="Current Icon" FontWeight="Bold"/>
                             <TextBlock Text="{Binding CurrentFolderIconReference}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                            <TextBlock Text="New Icon" FontWeight="Bold"/>
                             <Image Width="96" Height="96" Source="{Binding SelectedIcon.PreviewImage}" Margin="0,6,0,8"/>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="Apply" Width="140" Click="ApplyFolderIcon_Click"/>
-                                <Button Content="Undo / Restore" Width="180" Margin="8,0,0,0" Click="UndoLastChange_Click"/>
+                                <Button Content="Undo / Restore" Width="180" Click="UndoLastChange_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Drive Icons">
-                <StackPanel Margin="12">
-                    <TextBlock Text="Drive Letter (for example C:)"/>
-                    <TextBox Width="120" Text="{Binding SelectedDrive}"/>
-                    <TextBlock Text="Current Icon" FontWeight="Bold" Margin="0,8,0,0"/>
-                    <TextBlock Text="{Binding CurrentDriveIconReference}" TextWrapping="Wrap"/>
-                    <TextBlock Text="New Icon" FontWeight="Bold" Margin="0,8,0,0"/>
-                    <Image Width="96" Height="96" Source="{Binding SelectedIcon.PreviewImage}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                        <Button Content="Apply" Width="140" Click="ApplyDriveIcon_Click"/>
-                        <Button Content="Undo / Restore" Width="180" Margin="8,0,0,0" Click="UndoLastChange_Click"/>
-                    </StackPanel>
-                </StackPanel>
-            </TabItem>
-
-            <TabItem Header="Auto Match">
+            <TabItem Header="Wallpapers 2.0">
                 <Grid Margin="12">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                        <TextBlock Text="Scan Root"/>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBox Width="500" Text="{Binding ScanRoot}"/>
-                            <Button Content="Browse" Margin="8,0,0,0" Click="BrowseScanRoot_Click"/>
-                        </StackPanel>
-                        <TextBlock Text="Matching Mode: Strict (conservative)" Margin="0,8,0,0"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <Button Content="Run Auto Match" Width="160" Click="RunAutoMatch_Click"/>
-                            <Button Content="Cancel" Width="110" Margin="8,0,0,0" Click="CancelAutoMatch_Click"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding AutoProgressText}" Margin="0,8,0,0"/>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="Render Mode:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <ComboBox Width="180" ItemsSource="{Binding Wallpaper.RenderModes}" SelectedItem="{Binding Wallpaper.SelectedRenderMode}"/>
+                        <TextBlock Text="Span Behavior:" VerticalAlignment="Center" Margin="20,0,8,0"/>
+                        <ComboBox Width="180" ItemsSource="{Binding Wallpaper.SpanBehaviors}" SelectedItem="{Binding Wallpaper.SelectedSpanBehavior}"/>
+                        <Button Content="Refresh Displays" Margin="20,0,0,0" Click="RefreshDisplays_Click"/>
                     </StackPanel>
-                    <Grid Grid.Column="1">
-                        <Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                        <GroupBox Header="Applied Automatically" Margin="0,0,0,6">
-                            <ListBox ItemsSource="{Binding AppliedAutomatically}" DisplayMemberPath="FolderName"/>
-                        </GroupBox>
-                        <Grid Grid.Row="1">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                            <GroupBox Header="Our Best Guess" Margin="0,0,4,0"><ListBox ItemsSource="{Binding OurBestGuess}" DisplayMemberPath="FolderName"/></GroupBox>
-                            <GroupBox Grid.Column="1" Header="Used Default Icon" Margin="4,0,4,0"><ListBox ItemsSource="{Binding UsedDefaultIcon}" DisplayMemberPath="FolderName"/></GroupBox>
-                            <GroupBox Grid.Column="2" Header="Skipped" Margin="4,0,0,0"><ListBox ItemsSource="{Binding Skipped}" DisplayMemberPath="FolderName"/></GroupBox>
+
+                    <Border Grid.Row="1" Grid.Column="0" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="0,0,8,0">
+                        <Grid>
+                            <Canvas Width="760" Height="420" Background="#141414">
+                                <ItemsControl ItemsSource="{Binding Wallpaper.DisplaySlots}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <Canvas />
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemContainerStyle>
+                                        <Style TargetType="ContentPresenter">
+                                            <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                            <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                        </Style>
+                                    </ItemsControl.ItemContainerStyle>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Thumb DragDelta="DisplayThumb_DragDelta" Tag="{Binding SlotId}" Width="{Binding Width}" Height="{Binding Height}">
+                                                <Thumb.Template>
+                                                    <ControlTemplate TargetType="Thumb">
+                                                        <Border BorderThickness="2" BorderBrush="#FFD700" Background="#242424" CornerRadius="4">
+                                                            <StackPanel Margin="8">
+                                                                <TextBlock Text="{Binding Label}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                                <TextBlock Text="Drag to reposition" FontSize="11" Opacity="0.8"/>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Thumb.Template>
+                                            </Thumb>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Canvas>
                         </Grid>
-                    </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Grid.Column="1" BorderBrush="#444" BorderThickness="1" Padding="10">
+                        <StackPanel>
+                            <TextBlock Text="Assignment" FontWeight="Bold"/>
+                            <ComboBox Margin="0,8,0,0" ItemsSource="{Binding Wallpaper.DisplaySlots}" SelectedItem="{Binding Wallpaper.SelectedSlot}" DisplayMemberPath="Label"/>
+                            <TextBlock Margin="0,12,0,0" Text="Local Folder Source"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox Width="220" Text="{Binding Wallpaper.LocalSourcePath, UpdateSourceTrigger=PropertyChanged}"/>
+                                <Button Content="Browse" Click="BrowseWallpaperSource_Click"/>
+                            </StackPanel>
+                            <Button Content="Assign to Slot" Margin="0,8,0,0" Click="AssignWallpaperSource_Click" Width="140"/>
+                            <Button Content="Run Rotation Tick" Margin="0,8,0,0" Click="RunRotationTick_Click" Width="160"/>
+                        </StackPanel>
+                    </Border>
                 </Grid>
-            </TabItem>
-
-            <TabItem Header="Restore">
-                <StackPanel Margin="12">
-                    <TextBlock Text="Undo Last Change" FontWeight="Bold"/>
-                    <Button Content="Undo Last Change" Width="180" Margin="0,8,0,0" Click="UndoLastChange_Click"/>
-                </StackPanel>
-            </TabItem>
-
-            <TabItem Header="Advanced">
-                <StackPanel Margin="12">
-                    <TextBlock Text="Special Explorer / shell icons (per-user HKCU overrides)" FontWeight="Bold"/>
-                    <ComboBox Width="280" Margin="0,8,0,0" ItemsSource="{Binding ShellTargets}" SelectedItem="{Binding SelectedShellTarget}"/>
-                    <TextBlock Text="Current Icon" FontWeight="Bold" Margin="0,8,0,0"/>
-                    <TextBlock Text="{Binding CurrentShellIconReference}" TextWrapping="Wrap"/>
-                    <TextBlock Text="New Icon" FontWeight="Bold" Margin="0,8,0,0"/>
-                    <Image Width="96" Height="96" Source="{Binding SelectedIcon.PreviewImage}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                        <Button Content="Apply" Width="140" Click="ApplyShellIcon_Click"/>
-                        <Button Content="Restore Default" Width="140" Margin="8,0,0,0" Click="RestoreShellDefault_Click"/>
-                    </StackPanel>
-                    <TextBlock Text="{Binding AdvancedNote}" Margin="0,14,0,0" TextWrapping="Wrap"/>
-                </StackPanel>
-            </TabItem>
-
-            <TabItem Header="Help">
-                <TextBlock Margin="12" TextWrapping="Wrap"
-                           Text="RTS is designed to be conservative: exact/safe matches are applied automatically; weak matches are not. Use Restore to undo changes. Advanced features are fenced and use HKCU overrides by default."/>
             </TabItem>
         </TabControl>
 
         <Border Grid.Row="2" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="0,10,0,0">
-            <TextBlock Text="{Binding StatusMessage}"/>
+            <StackPanel>
+                <TextBlock Text="{Binding StatusMessage}"/>
+                <TextBlock Text="{Binding Wallpaper.StatusMessage}"/>
+            </StackPanel>
         </Border>
     </Grid>
 </Window>
