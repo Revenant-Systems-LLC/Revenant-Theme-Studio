@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using System.Windows; // For message boxes
 using Revenant_Theme_Studio.Models;
 using Revenant_Theme_Studio.Services;
 
@@ -24,6 +25,13 @@ namespace Revenant_Theme_Studio.ViewModels
         private readonly ChangeHistoryService _historyService;
         private readonly DriveIconService _driveIconService = new();
         private readonly ShellIconService _shellIconService = new();
+
+        // Service to check license status for pro features. Initialized once per VM.
+        private readonly LicenseService _licenseService = new();
+
+        // Registry backup service and user consent tracker. These ensure we ask for registry consent once and create a backup.
+        private readonly RegistryBackupService _registryBackupService = new();
+        private readonly ConsentService _consentService;
 
         private string _iconFolder = string.Empty;
         private string _selectedFolder = string.Empty;
@@ -55,6 +63,10 @@ namespace Revenant_Theme_Studio.ViewModels
             _matchingService.SetIconFolders();
             SystemResourcePath = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\SystemResources\imageres.dll.mun");
             ShellTargets = new ObservableCollection<string>(_shellIconService.Targets.Keys.OrderBy(x => x));
+
+            // Initialise consent service with backup service. This ensures the user only has to approve registry edits once.
+            _consentService = new ConsentService(_registryBackupService);
+
             ReloadIcons();
         }
 
@@ -149,7 +161,26 @@ namespace Revenant_Theme_Studio.ViewModels
 
         public void ApplyDriveIcon()
         {
-            if (SelectedIcon == null) { StatusMessage = "Select an icon first."; return; }
+            if (SelectedIcon == null)
+            {
+                StatusMessage = "Select an icon first.";
+                return;
+            }
+
+            // Pro feature gating: drive icon customization requires a Pro license.
+            if (!_licenseService.IsPro)
+            {
+                StatusMessage = "Drive icon customization is a Pro feature. Please purchase the Pro license to unlock.";
+                return;
+            }
+
+            // Ensure the user has consented to registry edits and that a backup has been made.
+            if (!_consentService.EnsureConsent())
+            {
+                StatusMessage = "Drive icon change canceled.";
+                return;
+            }
+
             var source = SelectedIcon.ResourcePath;
             var managed = File.Exists(source) && source.EndsWith(".ico", StringComparison.OrdinalIgnoreCase)
                 ? _storageService.ImportIcon(source)
@@ -157,14 +188,41 @@ namespace Revenant_Theme_Studio.ViewModels
             var iconReference = $"\"{managed}\",{SelectedIcon.ResourceIndex}";
             var previous = _driveIconService.GetCurrentIcon(SelectedDrive);
             _driveIconService.ApplyIcon(SelectedDrive, iconReference);
-            _historyService.Record(new ChangeRecord { BackupId = Guid.NewGuid().ToString("N"), TargetType = IconTargetType.Drive, TargetPath = SelectedDrive, PreviousValue = previous, NewValue = iconReference, Timestamp = DateTimeOffset.UtcNow });
+            _historyService.Record(new ChangeRecord
+            {
+                BackupId = Guid.NewGuid().ToString("N"),
+                TargetType = IconTargetType.Drive,
+                TargetPath = SelectedDrive,
+                PreviousValue = previous,
+                NewValue = iconReference,
+                Timestamp = DateTimeOffset.UtcNow
+            });
             StatusMessage = $"Drive {SelectedDrive} icon updated.";
             OnPropertyChanged(nameof(CurrentDriveIconReference));
         }
 
         public void ApplyShellIcon()
         {
-            if (SelectedIcon == null) { StatusMessage = "Select an icon first."; return; }
+            if (SelectedIcon == null)
+            {
+                StatusMessage = "Select an icon first.";
+                return;
+            }
+
+            // Pro feature gating: changing system icons is a Pro feature.
+            if (!_licenseService.IsPro)
+            {
+                StatusMessage = "Changing system icons is a Pro feature. Please purchase the Pro license to unlock.";
+                return;
+            }
+
+            // Ensure the user has consented to registry edits and that a backup has been made.
+            if (!_consentService.EnsureConsent())
+            {
+                StatusMessage = $"{SelectedShellTarget} icon change canceled.";
+                return;
+            }
+
             var source = SelectedIcon.ResourcePath;
             var managed = File.Exists(source) && source.EndsWith(".ico", StringComparison.OrdinalIgnoreCase)
                 ? _storageService.ImportIcon(source)
@@ -172,7 +230,15 @@ namespace Revenant_Theme_Studio.ViewModels
             var iconReference = $"\"{managed}\",{SelectedIcon.ResourceIndex}";
             var previous = _shellIconService.GetCurrentOverride(SelectedShellTarget);
             _shellIconService.ApplyOverride(SelectedShellTarget, iconReference);
-            _historyService.Record(new ChangeRecord { BackupId = Guid.NewGuid().ToString("N"), TargetType = IconTargetType.Shell, TargetPath = SelectedShellTarget, PreviousValue = previous, NewValue = iconReference, Timestamp = DateTimeOffset.UtcNow });
+            _historyService.Record(new ChangeRecord
+            {
+                BackupId = Guid.NewGuid().ToString("N"),
+                TargetType = IconTargetType.Shell,
+                TargetPath = SelectedShellTarget,
+                PreviousValue = previous,
+                NewValue = iconReference,
+                Timestamp = DateTimeOffset.UtcNow
+            });
             StatusMessage = $"{SelectedShellTarget} icon override set (HKCU).";
             OnPropertyChanged(nameof(CurrentShellIconReference));
         }
@@ -180,7 +246,25 @@ namespace Revenant_Theme_Studio.ViewModels
         public async Task RunAutoMatchAsync()
         {
             if (IsAutoRunning) return;
-            if (string.IsNullOrWhiteSpace(ScanRoot) || !Directory.Exists(ScanRoot)) { StatusMessage = "Scan root does not exist."; return; }
+            if (string.IsNullOrWhiteSpace(ScanRoot) || !Directory.Exists(ScanRoot))
+            {
+                StatusMessage = "Scan root does not exist.";
+                return;
+            }
+
+            // Pro feature gating: auto matching requires a Pro license.
+            if (!_licenseService.IsPro)
+            {
+                StatusMessage = "Auto Match is a Pro feature. Please purchase the Pro license to unlock.";
+                return;
+            }
+
+            // Confirm risk: auto mode will scan and update many folder icons.
+            if (!ConfirmRisk("Auto Match will scan and update folder icons in bulk. This may change a large number of icons. Proceed?"))
+            {
+                StatusMessage = "Auto Match canceled before start.";
+                return;
+            }
 
             AppliedAutomatically.Clear();
             OurBestGuess.Clear();
@@ -340,6 +424,18 @@ namespace Revenant_Theme_Studio.ViewModels
                     stack.Push(dir);
                 }
             }
+        }
+
+        /// <summary>
+        /// Prompt the user to confirm a potentially risky action. Returns true if the user selected Yes.
+        /// Uses a warning message box so the user understands the implications of system-level changes.
+        /// </summary>
+        /// <param name="message">The message to display to the user.</param>
+        /// <returns>True if the user confirmed the action, false otherwise.</returns>
+        private bool ConfirmRisk(string message)
+        {
+            var result = System.Windows.MessageBox.Show(message, "Confirm Action", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Warning);
+            return result == System.Windows.MessageBoxResult.Yes;
         }
 
         public void Dispose()

@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using Microsoft.Win32;
@@ -62,6 +63,42 @@ namespace Revenant_Theme_Studio
             var newX = Math.Max(0, slot.X + e.HorizontalChange);
             var newY = Math.Max(0, slot.Y + e.VerticalChange);
             ViewModel.Wallpaper.UpdateSlotPosition(slot.SlotId, newX, newY);
+        }
+
+        // New event handlers for Auto, Registry, and System Icons features
+
+        private void BrowseScanRoot_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenFolderDialog { Title = "Select Scan Root Folder" };
+            if (dialog.ShowDialog() == true)
+            {
+                ViewModel.ScanRoot = dialog.FolderName;
+            }
+        }
+
+        private async void RunAutoMatch_Click(object sender, RoutedEventArgs e)
+        {
+            await ViewModel.RunAutoMatchAsync();
+        }
+
+        private void CancelAutoMatch_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.CancelAutoMatch();
+        }
+
+        private void ApplyDriveIcon_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ApplyDriveIcon();
+        }
+
+        private void ApplyShellIcon_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.ApplyShellIcon();
+        }
+
+        private void RestoreShellIcon_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.RestoreSelectedShellDefault();
         }
     }
 }
