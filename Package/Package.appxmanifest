@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  IgnorableNamespaces="uap"
+  Name="RevenantThemeStudio"
+  Publisher="CN=YourCompanyName"
+  Version="1.0.0.0">
+  <Identity Name="RevenantThemeStudio" Publisher="CN=YourCompanyName" Version="1.0.0.0" />
+  <Properties>
+    <DisplayName>Revenant Theme Studio</DisplayName>
+    <PublisherDisplayName>Revenant Systems LLC</PublisherDisplayName>
+    <Logo>Assets/StoreLogo.png</Logo>
+  </Properties>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Applications>
+    <Application Id="RevenantThemeStudio" Executable="Revenant-Theme-Studio.exe" EntryPoint="Revenant_Theme_Studio.App">
+      <uap:VisualElements DisplayName="Revenant Theme Studio"
+                          Description="Customize folder, drive, system icons and wallpapers"
+                          Square150x150Logo="Assets/Logo.png"
+                          Square44x44Logo="Assets/SmallLogo.png"
+                          BackgroundColor="#15181B" />
+    </Application>
+  </Applications>
+</Package>
