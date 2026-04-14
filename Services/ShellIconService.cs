@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.Versioning;
 using Microsoft.Win32;
 
 namespace Revenant_Theme_Studio.Services
 {
+	[SupportedOSPlatform("windows")]
     public class ShellIconService
     {
         private const string ClsidRoot = @"Software\Classes\CLSID";

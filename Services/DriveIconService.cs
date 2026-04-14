@@ -1,8 +1,10 @@
 using System;
 using Microsoft.Win32;
+using System.Runtime.Versioning;
 
 namespace Revenant_Theme_Studio.Services
 {
+	[SupportedOSPlatform("windows")]
     public class DriveIconService
     {
         private const string DriveIconRoot = @"Software\Microsoft\Windows\CurrentVersion\Explorer\DriveIcons";
