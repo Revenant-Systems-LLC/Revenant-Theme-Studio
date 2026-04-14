@@ -9,3 +9,9 @@ sites/site*/public/theme/
 textpattern/
 HISTORY.txt
 README.txt
+bin/
+obj/
+**/bin/
+**/obj/
+desktop.ini
+build-warnings.txt
