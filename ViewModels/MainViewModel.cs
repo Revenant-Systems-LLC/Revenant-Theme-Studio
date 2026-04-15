@@ -15,7 +15,7 @@ namespace Revenant_Theme_Studio.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        private const string DefaultFallbackIconReference = @"%SystemRoot%\System32\shell32.dll,3";
+        private const string FallbackFolderIconCacheName = "fallback_folder.ico";
 
         private readonly FolderIconService _folderIconService = new();
         private readonly IconMatchingService _matchingService = new();
@@ -24,6 +24,7 @@ namespace Revenant_Theme_Studio.ViewModels
         private readonly ChangeHistoryService _historyService;
         private readonly DriveIconService _driveIconService = new();
         private readonly ShellIconService _shellIconService = new();
+        private readonly AppSettingsService _appSettings;
 
         private string _iconFolder = string.Empty;
         private string _selectedFolder = string.Empty;
@@ -50,6 +51,7 @@ namespace Revenant_Theme_Studio.ViewModels
         public MainViewModel()
         {
             _historyService = new ChangeHistoryService(_storageService);
+            _appSettings = new AppSettingsService(_storageService.RootPath);
             _matchingService.SetIconFolders();
             SystemResourcePath = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\SystemResources\imageres.dll.mun");
             ShellTargets = new ObservableCollection<string>(_shellIconService.Targets.Keys.OrderBy(x => x));
@@ -185,6 +187,10 @@ namespace Revenant_Theme_Studio.ViewModels
             UsedDefaultIcon.Clear();
             Skipped.Clear();
 
+            // Resolve fallback icon on the UI thread before the background loop.
+            // Priority: (1) user-configured default, (2) extracted imageres folder icon, (3) null = skip.
+            var sessionFallbackPath = ResolveSessionFallbackIcon();
+
             IsAutoRunning = true;
             _autoCts = new CancellationTokenSource();
             var token = _autoCts.Token;
@@ -214,18 +220,25 @@ namespace Revenant_Theme_Studio.ViewModels
                             }
                             else
                             {
-                                var previous = _folderIconService.GetCurrentIconReference(dir);
-                                _folderIconService.ApplyIconReference(dir, DefaultFallbackIconReference);
-                                _historyService.Record(new ChangeRecord { BackupId = Guid.NewGuid().ToString("N"), TargetType = IconTargetType.Folder, TargetPath = dir, PreviousValue = previous, NewValue = DefaultFallbackIconReference, Timestamp = DateTimeOffset.UtcNow });
-
-                                App.Current.Dispatcher.Invoke(() =>
+                                if (sessionFallbackPath != null)
                                 {
-                                    UsedDefaultIcon.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, SuggestedIcon = null, Reason = decision.Reason ?? "No safe semantic match." });
-                                    if (!string.IsNullOrWhiteSpace(decision.IconPath))
-                                    {
-                                        OurBestGuess.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, SuggestedIcon = Path.GetFileName(decision.IconPath), Reason = decision.Reason ?? "Rejected as unsafe." });
-                                    }
-                                });
+                                    // Apply the user's fallback (or the extracted imageres folder icon).
+                                    var previous = _folderIconService.GetCurrentIconReference(dir);
+                                    var reference = $"\"{sessionFallbackPath}\",0";
+                                    _folderIconService.ApplyIconReference(dir, reference);
+                                    _historyService.Record(new ChangeRecord { BackupId = Guid.NewGuid().ToString("N"), TargetType = IconTargetType.Folder, TargetPath = dir, PreviousValue = previous, NewValue = reference, Timestamp = DateTimeOffset.UtcNow });
+                                    App.Current.Dispatcher.Invoke(() => UsedDefaultIcon.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, SuggestedIcon = null, Reason = decision.Reason ?? "No safe semantic match; applied fallback icon." }));
+                                }
+                                else
+                                {
+                                    // No fallback available — leave the folder untouched.
+                                    App.Current.Dispatcher.Invoke(() => Skipped.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, Reason = decision.Reason ?? "No match and no fallback icon configured." }));
+                                }
+
+                                if (!string.IsNullOrWhiteSpace(decision.IconPath))
+                                {
+                                    App.Current.Dispatcher.Invoke(() => OurBestGuess.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, SuggestedIcon = Path.GetFileName(decision.IconPath), Reason = decision.Reason ?? "Rejected as unsafe." }));
+                                }
                             }
                         }
                         catch (Exception ex)
@@ -290,6 +303,45 @@ namespace Revenant_Theme_Studio.ViewModels
         }
 
         public void CancelAutoMatch() => _autoCts?.Cancel();
+
+        /// <summary>
+        /// Resolves the icon path to use when Auto Match finds no strong match for a folder.
+        /// Called once on the UI thread before the background scan loop.
+        /// Priority:
+        ///   1. User-configured default (AppSettingsService.DefaultFallbackIconPath) — if set and file exists.
+        ///   2. Bundled gm_default.ico from the gunmetal-theme directory deployed alongside the app.
+        ///   3. Folder icon extracted from imageres.dll.mun and cached — only if the bundled icon is missing.
+        ///   4. null — caller must skip the folder without writing anything.
+        /// </summary>
+        private string? ResolveSessionFallbackIcon()
+        {
+            // 1. User-configured default
+            var userDefault = _appSettings.DefaultFallbackIconPath;
+            if (!string.IsNullOrWhiteSpace(userDefault) && File.Exists(userDefault))
+                return userDefault;
+
+            // 2. Bundled gunmetal-theme default folder icon (deployed via CopyToOutputDirectory)
+            var bundledPath = Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "IconEngine", "gunmetal-theme", "gm_default.ico");
+            if (File.Exists(bundledPath))
+                return bundledPath;
+
+            // 3. Cached extraction from imageres.dll.mun (safety net if bundled icon is absent)
+            var cachedPath = Path.Combine(_storageService.CachePath, FallbackFolderIconCacheName);
+            if (File.Exists(cachedPath))
+                return cachedPath;
+
+            var munPath = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\SystemResources\imageres.dll.mun");
+            foreach (var index in new[] { 3, 4 })
+            {
+                if (_systemIconService.TryExtractIconToFile(munPath, index, cachedPath))
+                    return cachedPath;
+            }
+
+            // Nothing worked — caller should skip unmatched folders.
+            return null;
+        }
 
         private static bool TryCreateFileIconChoice(string iconPath, out IconChoice iconChoice)
         {

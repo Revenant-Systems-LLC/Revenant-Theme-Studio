@@ -18,4 +18,13 @@
     <Resource Include="IconEngine\icons\Logos\rts_app.ico" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Deploy the bundled gunmetal-theme icons alongside the executable.
+         gm_default.ico is used as the Auto Match fallback when no user default is set. -->
+    <None Remove="IconEngine\gunmetal-theme\**\*" />
+    <Content Include="IconEngine\gunmetal-theme\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
