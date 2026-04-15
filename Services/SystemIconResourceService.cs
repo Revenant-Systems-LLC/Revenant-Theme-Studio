@@ -73,6 +73,20 @@ namespace Revenant_Theme_Studio.Services
             return checked((int)count);
         }
 
+        /// <summary>
+        /// Returns true if ExtractIconEx can pull a handle for the given index.
+        /// Does not create a BitmapSource, so it is safe to call from a background thread.
+        /// </summary>
+        public bool CanExtractIcon(string resourcePath, int index)
+        {
+            var large = new IntPtr[1];
+            var small = new IntPtr[1];
+            uint extracted = ExtractIconEx(resourcePath, index, large, small, 1);
+            if (large[0] != IntPtr.Zero) DestroyIcon(large[0]);
+            if (small[0] != IntPtr.Zero) DestroyIcon(small[0]);
+            return extracted > 0;
+        }
+
         private static bool TryLoadIcon(string resourcePath, int index, out IconChoice iconChoice)
         {
             iconChoice = null!;

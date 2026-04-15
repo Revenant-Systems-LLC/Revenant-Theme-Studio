@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
@@ -15,8 +16,6 @@ namespace Revenant_Theme_Studio.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        private const string DefaultFallbackIconReference = @"%SystemRoot%\System32\shell32.dll,3";
-
         private readonly FolderIconService _folderIconService = new();
         private readonly IconMatchingService _matchingService = new();
         private readonly SystemIconResourceService _systemIconService = new();
@@ -39,6 +38,8 @@ namespace Revenant_Theme_Studio.ViewModels
         private string _selectedShellTarget = "Desktop";
         private string _advancedNote = "Direct system resource patching is advanced-only and intentionally not automated.";
         private CancellationTokenSource? _autoCts;
+        private string? _defaultFallbackIconPath;
+        private readonly string _appSettingsPath;
 
         public ObservableCollection<IconChoice> IconList { get; } = new();
         public ObservableCollection<AutoMatchResult> AppliedAutomatically { get; } = new();
@@ -50,9 +51,11 @@ namespace Revenant_Theme_Studio.ViewModels
         public MainViewModel()
         {
             _historyService = new ChangeHistoryService(_storageService);
+            _appSettingsPath = Path.Combine(_storageService.RootPath, "appsettings.json");
             _matchingService.SetIconFolders();
             SystemResourcePath = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\SystemResources\imageres.dll.mun");
             ShellTargets = new ObservableCollection<string>(_shellIconService.Targets.Keys.OrderBy(x => x));
+            LoadAppSettings();
             ReloadIcons();
         }
 
@@ -69,6 +72,7 @@ namespace Revenant_Theme_Studio.ViewModels
         public string SelectedDrive { get => _selectedDrive; set { _selectedDrive = value; OnPropertyChanged(); OnPropertyChanged(nameof(CurrentDriveIconReference)); } }
         public string SelectedShellTarget { get => _selectedShellTarget; set { _selectedShellTarget = value; OnPropertyChanged(); OnPropertyChanged(nameof(CurrentShellIconReference)); } }
         public string AdvancedNote { get => _advancedNote; set { _advancedNote = value; OnPropertyChanged(); } }
+        public string? DefaultFallbackIconPath { get => _defaultFallbackIconPath; set { _defaultFallbackIconPath = value; OnPropertyChanged(); SaveAppSettings(); } }
 
         public string CurrentFolderIconReference => string.IsNullOrWhiteSpace(SelectedFolder) || !Directory.Exists(SelectedFolder)
             ? "No icon assigned"
@@ -194,6 +198,10 @@ namespace Revenant_Theme_Studio.ViewModels
             {
                 await Task.Run(() =>
                 {
+                    // Resolve the fallback reference once for the entire run.
+                    // null means no fallback is available — unmatched folders will be skipped.
+                    string? autoMatchFallback = ResolveAutoMatchFallbackReference();
+
                     foreach (var dir in SafeEnumerateDirectories(ScanRoot, token))
                     {
                         token.ThrowIfCancellationRequested();
@@ -212,19 +220,27 @@ namespace Revenant_Theme_Studio.ViewModels
                                 _historyService.Record(new ChangeRecord { BackupId = Guid.NewGuid().ToString("N"), TargetType = IconTargetType.Folder, TargetPath = dir, PreviousValue = previous, NewValue = reference, Timestamp = DateTimeOffset.UtcNow });
                                 App.Current.Dispatcher.Invoke(() => AppliedAutomatically.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, SuggestedIcon = Path.GetFileName(decision.IconPath), Reason = decision.Reason ?? "Applied." }));
                             }
-                            else
+                            else if (autoMatchFallback != null)
                             {
                                 var previous = _folderIconService.GetCurrentIconReference(dir);
-                                _folderIconService.ApplyIconReference(dir, DefaultFallbackIconReference);
-                                _historyService.Record(new ChangeRecord { BackupId = Guid.NewGuid().ToString("N"), TargetType = IconTargetType.Folder, TargetPath = dir, PreviousValue = previous, NewValue = DefaultFallbackIconReference, Timestamp = DateTimeOffset.UtcNow });
+                                _folderIconService.ApplyIconReference(dir, autoMatchFallback);
+                                _historyService.Record(new ChangeRecord { BackupId = Guid.NewGuid().ToString("N"), TargetType = IconTargetType.Folder, TargetPath = dir, PreviousValue = previous, NewValue = autoMatchFallback, Timestamp = DateTimeOffset.UtcNow });
 
                                 App.Current.Dispatcher.Invoke(() =>
                                 {
                                     UsedDefaultIcon.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, SuggestedIcon = null, Reason = decision.Reason ?? "No safe semantic match." });
                                     if (!string.IsNullOrWhiteSpace(decision.IconPath))
-                                    {
                                         OurBestGuess.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, SuggestedIcon = Path.GetFileName(decision.IconPath), Reason = decision.Reason ?? "Rejected as unsafe." });
-                                    }
+                                });
+                            }
+                            else
+                            {
+                                // No fallback available — skip this folder, do not touch it.
+                                App.Current.Dispatcher.Invoke(() =>
+                                {
+                                    Skipped.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, Reason = decision.Reason ?? "No safe match and no fallback configured." });
+                                    if (!string.IsNullOrWhiteSpace(decision.IconPath))
+                                        OurBestGuess.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, SuggestedIcon = Path.GetFileName(decision.IconPath), Reason = decision.Reason ?? "Rejected as unsafe." });
                                 });
                             }
                         }
@@ -252,6 +268,54 @@ namespace Revenant_Theme_Studio.ViewModels
                 _autoCts?.Dispose();
                 _autoCts = null;
             }
+        }
+
+        // Fallback resolution: user default → imageres.dll.mun index 3/4 → null (skip).
+        // Called once per auto match run before the folder loop.
+        private string? ResolveAutoMatchFallbackReference()
+        {
+            // 1. User-configured default fallback icon.
+            if (!string.IsNullOrWhiteSpace(_defaultFallbackIconPath) && File.Exists(_defaultFallbackIconPath))
+            {
+                var managed = _storageService.ImportIcon(_defaultFallbackIconPath);
+                return $"\"{managed}\",0";
+            }
+
+            // 2. Standard folder icon from the configured system resource file (imageres.dll.mun).
+            if (!string.IsNullOrWhiteSpace(_systemResourcePath) && File.Exists(_systemResourcePath))
+            {
+                foreach (var idx in new[] { 3, 4 })
+                {
+                    if (_systemIconService.CanExtractIcon(_systemResourcePath, idx))
+                        return $"\"{_systemResourcePath}\",{idx}";
+                }
+            }
+
+            // 3. Neither available — caller should skip the folder.
+            return null;
+        }
+
+        private void LoadAppSettings()
+        {
+            if (!File.Exists(_appSettingsPath)) return;
+            try
+            {
+                using var stream = File.OpenRead(_appSettingsPath);
+                using var doc = JsonDocument.Parse(stream);
+                if (doc.RootElement.TryGetProperty("defaultFallbackIconPath", out var elem))
+                    _defaultFallbackIconPath = elem.GetString();
+            }
+            catch { /* Non-fatal: missing or corrupt settings file. */ }
+        }
+
+        private void SaveAppSettings()
+        {
+            try
+            {
+                var json = JsonSerializer.Serialize(new { defaultFallbackIconPath = _defaultFallbackIconPath });
+                File.WriteAllText(_appSettingsPath, json);
+            }
+            catch { /* Non-fatal: proceed without persisting. */ }
         }
 
         public void UndoLastChange()
