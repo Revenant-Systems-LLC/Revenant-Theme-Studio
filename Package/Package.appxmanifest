@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Revenant Theme Studio — MSIX package manifest (ship candidate).
+
+  ACTION REQUIRED BEFORE STORE SUBMISSION:
+    - Update <Identity Publisher="..."> to EXACTLY match the Publisher ID shown
+      in Partner Center > Account Settings > Legal Info (e.g. "CN=XXXX-XXXX...").
+      The string below is a readable placeholder — it will be rejected by Store
+      ingestion if left as-is on a real submission.
+    - Bump <Identity Version> for each Store submission (see MSIX versioning rules).
+
+  See Package\README.md (next to this file) for the full packaging walkthrough.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <Identity
+    Name="RevenantSystemsLLC.RevenantThemeStudio"
+    Publisher="CN=Revenant Systems LLC"
+    Version="1.0.0.0"
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Revenant Theme Studio</DisplayName>
+    <PublisherDisplayName>Revenant Systems LLC</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22000.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-US" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="Revenant-Theme-Studio\Revenant-Theme-Studio.exe"
+      EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="Revenant Theme Studio"
+        Description="Windows 11 theme manager: custom folder, drive, and system icons with consent-gated, fully reversible changes."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile
+          Wide310x150Logo="Assets\Wide310x150Logo.png"
+          Square310x310Logo="Assets\Square310x310Logo.png"
+          ShortName="RTS" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Required for desktop.ini writes, HKCU registry access, and user-profile file ops. -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+
+</Package>

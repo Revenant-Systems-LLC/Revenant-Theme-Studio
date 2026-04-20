@@ -26,3 +26,9 @@ build-warnings.txt
 
 # Large asset source archive — the extracted files in Assets/ are the source of truth.
 Assets/Assets.zip
+
+# Publish output from `dotnet publish` and MSIX packaging.
+dist/
+*.msix
+*.msixbundle
+*.appxupload

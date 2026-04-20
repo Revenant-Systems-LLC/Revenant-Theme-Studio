@@ -6,10 +6,24 @@
     <RootNamespace>Revenant_Theme_Studio</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <!-- Enable auto-emission of assembly attributes (Version/Product/Company/etc.) from the
+         csproj properties below. AssemblyInfo.cs keeps only the ThemeInfo + SupportedOSPlatform
+         attributes, neither of which overlaps with the auto-generated set. -->
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>true</GenerateTargetFrameworkAttribute>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Assets\rts_app.ico</ApplicationIcon>
+
+    <!-- Ship metadata — keep in sync with Package.appxmanifest.template <Identity Version> -->
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <Product>Revenant Theme Studio</Product>
+    <AssemblyTitle>Revenant Theme Studio</AssemblyTitle>
+    <Company>Revenant Systems LLC</Company>
+    <Authors>Revenant Systems LLC</Authors>
+    <Copyright>Copyright © 2026 Revenant Systems LLC</Copyright>
+    <Description>Windows 11 theme manager: custom folder, drive, and system icons with consent-gated, fully reversible changes.</Description>
     <!--
       Exclude Claude Code agent scratch directories from EVERY default item
       glob (Compile, Page, Resource, ApplicationDefinition, None, Embedded-
