@@ -2,61 +2,200 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="clr-namespace:Revenant_Theme_Studio.ViewModels"
+        xmlns:conv="clr-namespace:Revenant_Theme_Studio.Converters"
+        xmlns:ctrls="clr-namespace:Revenant_Theme_Studio.Controls"
         Title="Revenant Theme Studio"
-        Height="860"
-        Width="1320"
-        Background="#0D0D0D"
-        Foreground="#FFD700"
+        Height="880" Width="1340"
+        Foreground="#C4962B"
         WindowStartupLocation="CenterScreen">
+
+    <Window.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#002414" Offset="0"/>
+            <GradientStop Color="#001510" Offset="0.4"/>
+            <GradientStop Color="#000a05" Offset="1"/>
+        </LinearGradientBrush>
+    </Window.Background>
 
     <Window.DataContext>
         <vm:MainViewModel/>
     </Window.DataContext>
 
     <Window.Resources>
+        <SolidColorBrush x:Key="BgApp"        Color="#001a0e"/>
+        <SolidColorBrush x:Key="BgSurface"    Color="#002414"/>
+        <SolidColorBrush x:Key="BgInput"      Color="#000d07"/>
+        <SolidColorBrush x:Key="Gold"         Color="#997a4c"/>
+        <SolidColorBrush x:Key="GoldDark"     Color="#4a3a20"/>
+        <SolidColorBrush x:Key="GoldMuted"    Color="#5a4830"/>
+        <SolidColorBrush x:Key="ForestAccent" Color="#00422a"/>
+        <SolidColorBrush x:Key="RedAccent"    Color="#8B1A1A"/>
+        <SolidColorBrush x:Key="BorderColor"  Color="#00422a"/>
+
         <Style TargetType="Button">
-            <Setter Property="Background" Value="#1A1A1A"/>
-            <Setter Property="Foreground" Value="#FFD700"/>
-            <Setter Property="BorderBrush" Value="#FFD700"/>
+            <Setter Property="Background"      Value="#002414"/>
+            <Setter Property="Foreground"      Value="#997a4c"/>
+            <Setter Property="BorderBrush"     Value="#4a3a20"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="Margin" Value="4,0,0,0"/>
+            <Setter Property="Padding"         Value="10,5"/>
+            <Setter Property="Margin"          Value="4,0,0,0"/>
+            <Setter Property="FontFamily"      Value="Consolas"/>
+            <Setter Property="FontSize"        Value="14"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextBlock.Foreground="{TemplateBinding Foreground}"
+                                              TextBlock.FontFamily="{TemplateBinding FontFamily}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background"  Value="#00422a"/>
+                                <Setter TargetName="Root" Property="BorderBrush" Value="#997a4c"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background"  Value="#001510"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Background"  Value="#001a0e"/>
+                                <Setter TargetName="Root" Property="BorderBrush" Value="#2a1a0a"/>
+                                <Setter Property="Foreground" Value="#5a4820"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GoldButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Foreground"      Value="#001a0e"/>
+            <Setter Property="FontWeight"      Value="Bold"/>
+            <Setter Property="BorderBrush"     Value="#C4962B"/>
+            <Setter Property="Padding"         Value="16,7"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#C4962B" Offset="0"/>
+                        <GradientStop Color="#7a5e30" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#1A1A1A"/>
-            <Setter Property="Foreground" Value="#FFD700"/>
-            <Setter Property="BorderBrush" Value="#FFD700"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="Background"        Value="#001f10"/>
+            <Setter Property="Foreground"        Value="#C4962B"/>
+            <Setter Property="BorderBrush"       Value="#00422a"/>
+            <Setter Property="BorderThickness"   Value="1"/>
+            <Setter Property="Padding"           Value="6,4"/>
+            <Setter Property="FontSize"          Value="14"/>
+            <Setter Property="CaretBrush"        Value="#C4962B"/>
+            <Setter Property="SelectionBrush"    Value="#4a3a20"/>
         </Style>
 
         <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="#1A1A1A"/>
-            <Setter Property="Foreground" Value="#FFD700"/>
-            <Setter Property="BorderBrush" Value="#FFD700"/>
+            <Setter Property="Background"      Value="#000d07"/>
+            <Setter Property="Foreground"      Value="#997a4c"/>
+            <Setter Property="BorderBrush"     Value="#4a3a20"/>
             <Setter Property="BorderThickness" Value="1"/>
         </Style>
 
         <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="#FFD700"/>
+            <Setter Property="Foreground" Value="#C4962B"/>
+            <Setter Property="FontSize"   Value="14"/>
         </Style>
 
         <Style TargetType="ListBox">
-            <Setter Property="Background" Value="#111111"/>
-            <Setter Property="Foreground" Value="#FFD700"/>
-            <Setter Property="BorderBrush" Value="#444"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background"        Value="Transparent"/>
+            <Setter Property="Foreground"        Value="#997a4c"/>
+            <Setter Property="BorderBrush"       Value="#00422a"/>
+            <Setter Property="BorderThickness"   Value="0"/>
             <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility"   Value="Auto"/>
         </Style>
 
         <Style TargetType="GroupBox">
-            <Setter Property="BorderBrush" Value="#444"/>
-            <Setter Property="Foreground" Value="#FFD700"/>
-            <Setter Property="Margin" Value="0,0,0,6"/>
-            <Setter Property="Padding" Value="6"/>
+            <Setter Property="BorderBrush"   Value="#00422a"/>
+            <Setter Property="Foreground"    Value="#997a4c"/>
+            <Setter Property="Margin"        Value="0,0,0,6"/>
+            <Setter Property="Padding"       Value="6"/>
         </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="Background"  Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="#4a3a20"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <UniformGrid Grid.Row="0" Rows="1"
+                                         IsItemsHost="True"
+                                         HorizontalAlignment="Stretch"/>
+                            <Border Grid.Row="1"
+                                    Background="Transparent"
+                                    BorderBrush="#4a3a20"
+                                    BorderThickness="1,0,1,1">
+                                <ContentPresenter x:Name="PART_SelectedContentHost"
+                                                  ContentSource="SelectedContent"
+                                                  Margin="2"/>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Root"
+                                Background="#002414"
+                                BorderBrush="#4a3a20"
+                                BorderThickness="1,1,1,0"
+                                Padding="14,12">
+                            <ContentPresenter x:Name="Content"
+                                              ContentSource="Header"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              TextBlock.Foreground="#997a4c"
+                                              TextBlock.FontFamily="Consolas"
+                                              TextBlock.FontSize="14"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Root"    Property="Background"             Value="#997a4c"/>
+                                <Setter TargetName="Root"    Property="BorderBrush"            Value="#997a4c"/>
+                                <Setter TargetName="Content" Property="TextBlock.Foreground"   Value="#001a0e"/>
+                                <Setter TargetName="Content" Property="TextBlock.FontWeight"   Value="Bold"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                    <Condition Property="IsSelected"  Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Root"    Property="Background"           Value="#003d1e"/>
+                                <Setter TargetName="Content" Property="TextBlock.Foreground" Value="#997a4c"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <conv:InverseBooleanConverter x:Key="InverseBool"/>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
     </Window.Resources>
 
     <Grid Margin="12">
@@ -66,111 +205,197 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Revenant Theme Studio" FontSize="42" FontWeight="Bold" Margin="0,0,0,10"/>
+        <!-- ── Header ── -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,10" LastChildFill="False">
+            <Image DockPanel.Dock="Left"
+                   Source="pack://application:,,,/Assets/rts-header-logo-alt.png"
+                   Height="120"
+                   HorizontalAlignment="Left"
+                   RenderOptions.BitmapScalingMode="HighQuality"
+                   Stretch="Uniform"
+                   Margin="0,0,20,0"/>
+            <StackPanel DockPanel.Dock="Left" VerticalAlignment="Center">
+                <TextBlock Text="REVENANT THEME STUDIO"
+                           FontFamily="pack://application:,,,/Assets/#Street Reich"
+                           FontSize="72"
+                           Foreground="#997a4c"/>
+                <TextBlock Text="ICON MANAGEMENT SYSTEM  ·  REVENANT SYSTEMS LLC"
+                           FontFamily="Consolas" FontSize="12"
+                           Foreground="#4a3a20" Margin="2,4,0,0"/>
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="⚿  Unlock Pro" Click="UnlockPro_Click" Padding="14,7"
+                        Visibility="{Binding IsProUnlocked, Converter={StaticResource InverseBoolToVis}}"/>
+                <Border Background="#1B4D35" BorderBrush="#C4962B" BorderThickness="1" Padding="14,7" Margin="4,0,0,0"
+                        Visibility="{Binding IsProUnlocked, Converter={StaticResource BoolToVis}}">
+                    <TextBlock Text="✓  RTS PRO" FontFamily="Consolas" Foreground="#C4962B" FontWeight="Bold"/>
+                </Border>
+            </StackPanel>
+        </DockPanel>
 
-        <TabControl Grid.Row="1" Background="#0D0D0D" BorderBrush="#FFD700">
-            <TabItem Header="Folder Icons">
+        <!-- ── Watermark ── -->
+        <Image Grid.Row="1" Grid.RowSpan="2"
+               Source="pack://application:,,,/Assets/revsys-wordmark.png"
+               HorizontalAlignment="Right"
+               VerticalAlignment="Bottom"
+               Opacity="0.07"
+               IsHitTestVisible="False"
+               Height="520"
+               RenderOptions.BitmapScalingMode="HighQuality"
+               Stretch="Uniform"
+               Margin="0,0,-30,0"/>
+
+        <!-- ── Tabs ──
+             Each icon-aware tab is a 2-column Grid: rail | tab content.
+             Each rail is bound to its own TabIconPickerViewModel so the
+             three tabs hold independent folder picks and selections. -->
+        <TabControl Grid.Row="1">
+
+            <!-- ═══════════════ Folder Icons ═══════════════ -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Rectangle Width="16" Height="16" Margin="0,0,6,0">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#C4962B" Offset="0"/>
+                                    <GradientStop Color="#7a5e30" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                            <Rectangle.OpacityMask>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_app_alt.ico" Stretch="Uniform"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                        <TextBlock Text="Folder Icons" FontFamily="Consolas" FontSize="13"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="380"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Icon Library:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBox Width="640" Text="{Binding IconFolder, UpdateSourceTrigger=PropertyChanged}"/>
-                        <Button Content="Browse" Click="BrowseIconFolder_Click"/>
-                    </StackPanel>
+                    <ctrls:IconLibraryRail Grid.Column="0"
+                                           DataContext="{Binding FolderIconPicker}"/>
 
-                    <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,0" VerticalAlignment="Center">
-                        <CheckBox Content="Include Windows system icons" IsChecked="{Binding IncludeSystemIcons}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <TextBox Width="500" Text="{Binding SystemResourcePath, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding IncludeSystemIcons}"/>
-                        <Button Content="Browse" Click="BrowseSystemResource_Click" IsEnabled="{Binding IncludeSystemIcons}"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,8,0,8">
-                        <TextBlock Text="Selected Folder:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBox Width="640" Text="{Binding SelectedFolder}" IsReadOnly="True"/>
-                        <Button Content="Browse" Click="BrowseTargetFolder_Click"/>
-                    </StackPanel>
-
-                    <Border Grid.Row="3" Grid.Column="0" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="0,0,6,0">
-                        <DockPanel>
-                            <TextBlock DockPanel.Dock="Top" Text="Icon Library" FontWeight="Bold" Margin="0,0,0,8"/>
-                            <ListBox ItemsSource="{Binding IconList}" SelectedItem="{Binding SelectedIcon}">
-                                <ListBox.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <UniformGrid Columns="6"/>
-                                    </ItemsPanelTemplate>
-                                </ListBox.ItemsPanel>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Width="96" Margin="6" HorizontalAlignment="Center">
-                                            <Image Width="42" Height="42" Source="{Binding PreviewImage}" HorizontalAlignment="Center"/>
-                                            <TextBlock Text="{Binding DisplayName}" FontSize="10" TextWrapping="Wrap" TextAlignment="Center"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </DockPanel>
-                    </Border>
-
-                    <Border Grid.Row="3" Grid.Column="1" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="6,0,0,0">
+                    <Border Grid.Column="1" Background="#55000a05"
+                            BorderBrush="#00422a" BorderThickness="1" Padding="14" Margin="6,0,0,0">
                         <StackPanel>
-                            <TextBlock Text="Selected Folder" FontWeight="Bold"/>
-                            <TextBlock Text="{Binding SelectedFolder}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                            <TextBlock Text="Current Icon" FontWeight="Bold"/>
-                            <TextBlock Text="{Binding CurrentFolderIconReference}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                            <TextBlock Text="New Icon" FontWeight="Bold"/>
-                            <Image Width="96" Height="96" Source="{Binding SelectedIcon.PreviewImage}" Margin="0,6,0,8"/>
+                            <TextBlock Text="TARGET FOLDER" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,12">
+                                <TextBox Width="500" Text="{Binding SelectedFolder}" IsReadOnly="True"/>
+                                <Button Content="Browse" Click="BrowseTargetFolder_Click"/>
+                            </StackPanel>
+
+                            <TextBlock Text="CURRENT ICON" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+                            <TextBlock Text="{Binding CurrentFolderIconReference}" TextWrapping="Wrap" Margin="0,2,0,12"/>
+
+                            <TextBlock Text="NEW ICON (selected in rail at left)" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+                            <Image Width="96" Height="96"
+                                   Source="{Binding FolderIconPicker.SelectedIcon.PreviewImage}"
+                                   Margin="0,6,0,12" HorizontalAlignment="Left"/>
+
                             <StackPanel Orientation="Horizontal">
-                                <Button Content="Apply" Width="140" Click="ApplyFolderIcon_Click"/>
-                                <Button Content="Undo / Restore" Width="180" Click="UndoLastChange_Click"/>
+                                <Button Content="Apply" Width="140" Click="ApplyFolderIcon_Click" Style="{StaticResource GoldButton}"/>
+                                <Button Content="Undo / Restore  [Pro]" Width="180" Click="UndoLastChange_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Drive Icons">
-                <StackPanel Margin="12">
-                    <TextBlock Text="Drive Letter (for example C:)"/>
-                    <TextBox Width="120" Text="{Binding SelectedDrive}"/>
-                    <TextBlock Text="Current Icon" FontWeight="Bold" Margin="0,8,0,0"/>
-                    <TextBlock Text="{Binding CurrentDriveIconReference}" TextWrapping="Wrap"/>
-                    <TextBlock Text="New Icon" FontWeight="Bold" Margin="0,8,0,0"/>
-                    <Image Width="96" Height="96" Source="{Binding SelectedIcon.PreviewImage}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                        <Button Content="Apply" Width="140" Click="ApplyDriveIcon_Click"/>
-                        <Button Content="Undo / Restore" Width="180" Click="UndoLastChange_Click"/>
+            <!-- ═══════════════ Drive Icons ═══════════════ -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Rectangle Width="16" Height="16" Margin="0,0,6,0">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#C4962B" Offset="0"/>
+                                    <GradientStop Color="#7a5e30" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                            <Rectangle.OpacityMask>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_app_alt.ico" Stretch="Uniform"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                        <TextBlock Text="Drive Icons" FontFamily="Consolas" FontSize="13"/>
                     </StackPanel>
-                </StackPanel>
+                </TabItem.Header>
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="380"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ctrls:IconLibraryRail Grid.Column="0"
+                                           DataContext="{Binding DriveIconPicker}"/>
+
+                    <Border Grid.Column="1" Background="#55000a05"
+                            BorderBrush="#00422a" BorderThickness="1" Padding="14" Margin="6,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="DRIVE LETTER" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+                            <TextBox Width="120" Text="{Binding SelectedDrive}" HorizontalAlignment="Left" Margin="0,4,0,12"/>
+
+                            <TextBlock Text="CURRENT ICON" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+                            <TextBlock Text="{Binding CurrentDriveIconReference}" TextWrapping="Wrap" Margin="0,2,0,12"/>
+
+                            <TextBlock Text="NEW ICON (selected in rail at left)" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,12">
+                                <Image Width="64" Height="64" Source="{Binding DriveIconPicker.SelectedIcon.PreviewImage}" Margin="0,0,10,0"/>
+                                <TextBlock Text="{Binding DriveIconPicker.SelectedIcon.DisplayName}" VerticalAlignment="Center" FontSize="14"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Apply" Width="140" Click="ApplyDriveIcon_Click" Style="{StaticResource GoldButton}"/>
+                                <Button Content="Undo / Restore  [Pro]" Width="180" Click="UndoLastChange_Click"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </TabItem>
 
-            <TabItem Header="Auto Match">
+            <!-- ═══════════════ Auto Match ═══════════════
+                 No rail — Auto Match scans a folder tree and uses
+                 IconMatchingService to pick icons from the configured
+                 library. The picker controls live inside this tab's own
+                 controls (top of the panel) when needed. -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Rectangle Width="16" Height="16" Margin="0,0,6,0">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#C4962B" Offset="0"/>
+                                    <GradientStop Color="#7a5e30" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                            <Rectangle.OpacityMask>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_app_alt.ico" Stretch="Uniform"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                        <TextBlock Text="Auto Match  [Pro]" FontFamily="Consolas" FontSize="13"/>
+                    </StackPanel>
+                </TabItem.Header>
                 <Grid Margin="12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                        <TextBlock Text="Scan Root"/>
-                        <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="SCAN ROOT" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                             <TextBox Width="500" Text="{Binding ScanRoot}"/>
                             <Button Content="Browse" Click="BrowseScanRoot_Click"/>
                         </StackPanel>
-                        <TextBlock Text="Matching Mode: Strict (conservative)" Margin="0,8,0,0"/>
+                        <TextBlock Text="Matching Mode: Strict (conservative)" Foreground="#6B5820" Margin="0,10,0,0" FontSize="12"/>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <Button Content="Run Auto Match" Width="160" Click="RunAutoMatch_Click"/>
-                            <Button Content="Cancel" Width="110" Click="CancelAutoMatch_Click"/>
+                            <Button Content="Run Auto Match" Width="160" Click="RunAutoMatch_Click"
+                                    IsEnabled="{Binding IsAutoRunning, Converter={StaticResource InverseBool}}"/>
+                            <Button Content="Cancel" Width="110" Click="CancelAutoMatch_Click"
+                                    IsEnabled="{Binding IsAutoRunning}"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding AutoProgressText}" Margin="0,8,0,0"/>
+                        <TextBlock Text="{Binding AutoProgressText}" Foreground="#6B5820" Margin="0,10,0,0"/>
                     </StackPanel>
                     <Grid Grid.Column="1">
                         <Grid.RowDefinitions>
@@ -186,13 +411,13 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <GroupBox Header="Our Best Guess" Margin="0,0,4,0">
+                            <GroupBox Header="Best Guess" Margin="0,0,4,0">
                                 <ListBox ItemsSource="{Binding OurBestGuess}" DisplayMemberPath="FolderName"/>
                             </GroupBox>
-                            <GroupBox Grid.Column="1" Header="Used Default Icon" Margin="4,0,4,0">
+                            <GroupBox Grid.Column="1" Header="No Match" Margin="4,0,4,0">
                                 <ListBox ItemsSource="{Binding UsedDefaultIcon}" DisplayMemberPath="FolderName"/>
                             </GroupBox>
-                            <GroupBox Grid.Column="2" Header="Skipped" Margin="4,0,0,0">
+                            <GroupBox Grid.Column="2" Header="Errors" Margin="4,0,0,0">
                                 <ListBox ItemsSource="{Binding Skipped}" DisplayMemberPath="FolderName"/>
                             </GroupBox>
                         </Grid>
@@ -200,37 +425,263 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Restore">
-                <StackPanel Margin="12">
-                    <TextBlock Text="Undo Last Change" FontWeight="Bold"/>
-                    <Button Content="Undo Last Change" Width="180" Margin="0,8,0,0" Click="UndoLastChange_Click"/>
-                </StackPanel>
-            </TabItem>
-
-            <TabItem Header="Advanced">
-                <StackPanel Margin="12">
-                    <TextBlock Text="Special Explorer / shell icons (per-user HKCU overrides)" FontWeight="Bold"/>
-                    <ComboBox Width="280" Margin="0,8,0,0" ItemsSource="{Binding ShellTargets}" SelectedItem="{Binding SelectedShellTarget}"/>
-                    <TextBlock Text="Current Icon" FontWeight="Bold" Margin="0,8,0,0"/>
-                    <TextBlock Text="{Binding CurrentShellIconReference}" TextWrapping="Wrap"/>
-                    <TextBlock Text="New Icon" FontWeight="Bold" Margin="0,8,0,0"/>
-                    <Image Width="96" Height="96" Source="{Binding SelectedIcon.PreviewImage}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                        <Button Content="Apply" Width="140" Click="ApplyShellIcon_Click"/>
-                        <Button Content="Restore Default" Width="140" Click="RestoreShellDefault_Click"/>
+            <!-- ═══════════════ System Icons ═══════════════ -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Rectangle Width="16" Height="16" Margin="0,0,6,0">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#C4962B" Offset="0"/>
+                                    <GradientStop Color="#7a5e30" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                            <Rectangle.OpacityMask>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_app_alt.ico" Stretch="Uniform"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                        <TextBlock Text="System Icons  [Pro]" FontFamily="Consolas" FontSize="13"/>
                     </StackPanel>
-                    <TextBlock Text="{Binding AdvancedNote}" Margin="0,14,0,0" TextWrapping="Wrap"/>
-                </StackPanel>
+                </TabItem.Header>
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="380"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ctrls:IconLibraryRail Grid.Column="0"
+                                           DataContext="{Binding SystemIconPicker}"/>
+
+                    <!-- Right column: target picker + .mun editor entrypoint.
+                         The live registry-snapshot grid lands here next pass. -->
+                    <Border Grid.Column="1" Background="#55000a05"
+                            BorderBrush="#00422a" BorderThickness="1" Padding="14" Margin="6,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="EXPLORER TARGET" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+                            <ComboBox Width="320" Margin="0,4,0,12" HorizontalAlignment="Left"
+                                      ItemsSource="{Binding SystemTargets}" SelectedItem="{Binding SelectedSystemTarget}"/>
+
+                            <TextBlock Text="CURRENT ICON (registry value)" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+                            <TextBlock Text="{Binding CurrentSystemIconReference}" TextWrapping="Wrap" Margin="0,2,0,12"/>
+
+                            <TextBlock Text="NEW ICON (selected in rail at left)" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,12">
+                                <Image Width="64" Height="64" Source="{Binding SystemIconPicker.SelectedIcon.PreviewImage}" Margin="0,0,10,0"/>
+                                <TextBlock Text="{Binding SystemIconPicker.SelectedIcon.DisplayName}" VerticalAlignment="Center" FontSize="14"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                                <Button Content="Apply" Width="140" Click="ApplySystemIcon_Click" Style="{StaticResource GoldButton}"/>
+                                <Button Content="Restore Default" Width="160" Click="RestoreSystemDefault_Click"/>
+                            </StackPanel>
+
+                            <TextBlock Text="{Binding AdvancedNote}" Margin="0,8,0,0" TextWrapping="Wrap"
+                                       Foreground="#3D5A2A" FontSize="12"/>
+
+                            <!-- ─── .mun editor section (placeholder until next pass) ─── -->
+                            <Border Background="#001a0e" BorderBrush="#4a3a20" BorderThickness="1"
+                                    Padding="12" Margin="0,16,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="imageres.dll.mun  EDITOR" FontFamily="Consolas"
+                                               FontWeight="Bold" Foreground="#C4962B" FontSize="13"/>
+                                    <TextBlock Margin="0,6,0,8" TextWrapping="Wrap" Foreground="#6B5820" FontSize="12"
+                                               Text="Edit the system .mun resource for icons not addressable via the registry (This PC, Recycle Bin, drive types, dialog icons, etc.). RTS copies your unedited .mun to the managed-storage backup folder before any change. Coming online in this build."/>
+                                    <Button Content="Launch .mun Editor (coming soon)" HorizontalAlignment="Left" IsEnabled="False"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </TabItem>
 
-            <TabItem Header="Help">
-                <TextBlock Margin="12" TextWrapping="Wrap"
-                           Text="RTS is conservative by default: exact/safe matches only, weak guesses rejected, and safe fallback icons used when no match is trustworthy. Use Restore to undo changes."/>
+            <!-- ═══════════════ Help ═══════════════ -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Rectangle Width="16" Height="16" Margin="0,0,6,0">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#C4962B" Offset="0"/>
+                                    <GradientStop Color="#7a5e30" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                            <Rectangle.OpacityMask>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_app_alt.ico" Stretch="Uniform"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                        <TextBlock Text="Help" FontFamily="Consolas" FontSize="13"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
+                    <StackPanel Margin="24,20,24,28" MaxWidth="900" HorizontalAlignment="Left">
+
+                        <!-- ─── Top warning band ─── -->
+                        <Border Background="#2A0808" BorderBrush="#8B1A1A" BorderThickness="1" Padding="16,12" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="⚠  AT YOUR OWN RISK"
+                                           FontFamily="Consolas" FontWeight="Bold" FontSize="14"
+                                           Foreground="#E04848"/>
+                                <TextBlock Margin="0,6,0,0" TextWrapping="Wrap"
+                                           Foreground="#D8B0B0" FontSize="13" LineHeight="20"
+                                           Text="Please know that you do all of this at your own risk. Although I've spent countless hours trying to make sure that nobody can brick their computer with RTS, be cautious. Registry edits, fucking with the DLL that we're going to edit — it can go bad if you edit the wrong thing."/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ─── Philosophy ─── -->
+                        <TextBlock Text="WHY RTS EXISTS"
+                                   FontFamily="Consolas" FontWeight="Bold" FontSize="14"
+                                   Foreground="#C4962B" Margin="0,0,0,8"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22" Margin="0,0,0,12"
+                                   Text="Revenant Theme Studio is conservative by default. Only strong, exact matches are applied automatically. Weak guesses surface for review, but are never applied without your confirmation."/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22" Margin="0,0,0,12"
+                                   Text="When we wrote the code for RTS, the main goal at the forefront of our mind the entire time was to make it safe enough and easy enough that anyone could modify their Windows UI. As it stands right now, this process is so much more painful and way more complicated than it should be."/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#C4962B" FontSize="14" LineHeight="22" Margin="0,0,0,24"
+                                   FontWeight="Bold"
+                                   Text="Revenant Theme Studio aims to change that — and do it safely."/>
+
+                        <!-- ─── What it does without admin ─── -->
+                        <TextBlock Text="WHAT WORKS WITHOUT ADMIN RIGHTS"
+                                   FontFamily="Consolas" FontWeight="Bold" FontSize="14"
+                                   Foreground="#C4962B" Margin="0,0,0,8"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22" Margin="0,0,0,24"
+                                   Text="We can change almost every icon you will see on the desktop and in File Explorer without admin rights. There are work-arounds, but we cannot replace all of them — and even the work-arounds have caveats."/>
+
+                        <!-- ─── .mun file: needs admin ─── -->
+                        <TextBlock Text="THE ONE EXCEPTION:  imageres.dll.mun"
+                                   FontFamily="Consolas" FontWeight="Bold" FontSize="14"
+                                   Foreground="#C4962B" Margin="0,0,0,8"/>
+                        <TextBlock TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22" Margin="0,0,0,24"
+                                   Text="We need elevated permissions to edit a not-so-small file: imageres.dll.mun. This file contains hundreds and hundreds of protected system icons for Windows. It's the file Windows uses for all of its default icons. It's the icon source that nearly every registry entry points to. To edit it, you will need to grant admin rights."/>
+
+                        <!-- ─── Editor workflow card ─── -->
+                        <Border Background="#001a0e" BorderBrush="#00422a" BorderThickness="1" Padding="16,14" Margin="0,0,0,24">
+                            <StackPanel>
+                                <TextBlock Text="THE  .MUN  EDITOR  WORKFLOW"
+                                           FontFamily="Consolas" FontWeight="Bold" FontSize="14"
+                                           Foreground="#C4962B" Margin="0,0,0,12"/>
+                                <TextBlock TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22" Margin="0,0,0,14"
+                                           Text="Our editor is basic. The flow goes:"/>
+
+                                <!-- Step 1 -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="32"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="1." FontFamily="Consolas" FontWeight="Bold" Foreground="#C4962B" FontSize="14"/>
+                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22"
+                                               Text="Open the .mun file in the editor and pick which icons you want to change."/>
+                                </Grid>
+
+                                <!-- Step 2 -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="32"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="2." FontFamily="Consolas" FontWeight="Bold" Foreground="#C4962B" FontSize="14"/>
+                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22"
+                                               Text="Press EXPORT. RTS will drop the icon onto your desktop as an .ico file."/>
+                                </Grid>
+
+                                <!-- Step 3 — emphasised -->
+                                <Border Background="#2A1F08" BorderBrush="#C4962B" BorderThickness="1" Padding="10,8" Margin="32,0,0,12">
+                                    <TextBlock TextWrapping="Wrap" Foreground="#F0CC60" FontSize="13" LineHeight="20"
+                                               FontWeight="Bold"
+                                               Text="DO NOT CHANGE THE FILE NAME. The replace step matches by name (IconGroupNNNN.ico) — rename it and the editor won't find a target."/>
+                                </Border>
+
+                                <!-- Step 4 -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="32"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="3." FontFamily="Consolas" FontWeight="Bold" Foreground="#C4962B" FontSize="14"/>
+                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22"
+                                               Text="Use your favourite art suite and edit those .ico files to your heart's content."/>
+                                </Grid>
+
+                                <!-- Step 5 -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="32"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="4." FontFamily="Consolas" FontWeight="Bold" Foreground="#C4962B" FontSize="14"/>
+                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22"
+                                               Text="Re-open the .mun file in RTS. Next to each icon's EXPORT button you'll see a REPLACE button."/>
+                                </Grid>
+
+                                <!-- Step 6 -->
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="32"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="5." FontFamily="Consolas" FontWeight="Bold" Foreground="#C4962B" FontSize="14"/>
+                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22"
+                                               Text="Press REPLACE, navigate to wherever you saved the edited .ico (desktop by default), and pick the file with the same name (IconGroupNNNN.ico — there are a couple thousand of them, so check the number)."/>
+                                </Grid>
+
+                                <!-- Step 7 -->
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="32"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="6." FontFamily="Consolas" FontWeight="Bold" Foreground="#C4962B" FontSize="14"/>
+                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22"
+                                               Text="Click APPLY. RTS will back up the original .mun, take ownership, swap the file, and hand ownership back to TrustedInstaller."/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ─── Windows Update caveat ─── -->
+                        <Border Background="#2A1F08" BorderBrush="#C4962B" BorderThickness="1" Padding="16,12" Margin="0,0,0,20">
+                            <StackPanel>
+                                <TextBlock Text="⚠  HEADS UP — THIS IS A TEMPORARY FIX"
+                                           FontFamily="Consolas" FontWeight="Bold" FontSize="14"
+                                           Foreground="#F0CC60"/>
+                                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                                           Foreground="#D9BE7A" FontSize="13" LineHeight="20"
+                                           Text="Editing imageres.dll.mun is NOT a permanent change. Almost every Windows security update touches one or more of the .ico resources inside that file, and Windows Update reinstalls the whole .mun — wiping your edits along with it. Expect to re-apply your custom .mun after major updates."/>
+                                <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+                                           Foreground="#A88E5E" FontSize="13" LineHeight="20"
+                                           Text="The good news: RTS keeps the backup of the original .mun and the edited .mun side-by-side in your ManagedIcons folder, so re-applying after an update is a one-click job — not a full re-edit."/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ─── Reassurance ─── -->
+                        <Border Background="#002414" BorderBrush="#00422a" BorderThickness="1" Padding="14,12" Margin="0,0,0,20">
+                            <TextBlock TextWrapping="Wrap" Foreground="#A88E5E" FontSize="14" LineHeight="22"
+                                       Text="I promise you, this application will do nothing else with the elevated permissions. As soon as the .mun file edit is done, the elevated permissions are no longer needed."/>
+                        </Border>
+
+                        <!-- ─── Closing warning ─── -->
+                        <Border Background="#2A0808" BorderBrush="#8B1A1A" BorderThickness="1" Padding="16,12">
+                            <StackPanel>
+                                <TextBlock Text="⚠  ONE MORE TIME"
+                                           FontFamily="Consolas" FontWeight="Bold" FontSize="14"
+                                           Foreground="#E04848"/>
+                                <TextBlock Margin="0,6,0,0" TextWrapping="Wrap"
+                                           Foreground="#D8B0B0" FontSize="13" LineHeight="20"
+                                           Text="Please know that you do all of this at your own risk. I have tested this app exhaustively — but I have not tested it on YOUR machine. Stay vigilant."/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
 
-        <Border Grid.Row="2" BorderBrush="#444" BorderThickness="1" Padding="8" Margin="0,10,0,0">
-            <TextBlock Text="{Binding StatusMessage}"/>
+        <!-- ── Status Bar ── -->
+        <Border Grid.Row="2" Background="#002414" BorderBrush="#00422a" BorderThickness="1" Padding="10,6" Margin="0,8,0,0">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Right" Text="REVENANT SYSTEMS LLC"
+                           FontFamily="Consolas" FontSize="12" Foreground="#4a3a20" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding StatusMessage}" FontFamily="Consolas" Foreground="#997a4c" VerticalAlignment="Center"/>
+            </DockPanel>
         </Border>
     </Grid>
 </Window>

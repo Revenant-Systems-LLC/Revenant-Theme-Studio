@@ -1,0 +1,49 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Revenant-Theme-Studio", "Revenant-Theme-Studio.csproj", "{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|ARM = Debug|ARM
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|ARM = Release|ARM
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Debug|ARM.Build.0 = Debug|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Debug|x64.Build.0 = Debug|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Debug|x86.Build.0 = Debug|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|ARM.ActiveCfg = Release|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|ARM.Build.0 = Release|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|ARM64.Build.0 = Release|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|x64.ActiveCfg = Release|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|x64.Build.0 = Release|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|x86.ActiveCfg = Release|Any CPU
+		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B8EAC66B-C023-46B9-B51C-C44794FD00D1}
+	EndGlobalSection
+EndGlobal

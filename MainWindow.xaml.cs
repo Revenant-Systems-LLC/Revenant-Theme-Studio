@@ -31,32 +31,12 @@ namespace Revenant_Theme_Studio
         }
 
         // ── Browse handlers ──────────────────────────────────────────────────
-        private void BrowseIconFolder_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFolderDialog { Title = "Select Icon Library Folder" };
-            if (dialog.ShowDialog() == true) ViewModel.IconFolder = dialog.FolderName;
-        }
-
+        // Icon-folder + system-resource browse handlers now live on the rail
+        // (Controls/IconLibraryRail.xaml.cs) so each tab handles its own picker.
         private void BrowseTargetFolder_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFolderDialog { Title = "Select Folder" };
             if (dialog.ShowDialog() == true) ViewModel.SelectedFolder = dialog.FolderName;
-        }
-
-        private void BrowseSystemResource_Click(object sender, RoutedEventArgs e)
-        {
-            var dialog = new OpenFileDialog
-            {
-                Title = "Select System Icon Resource",
-                Filter = "MUI Resource (*.mun;*.dll)|*.mun;*.dll|All Files (*.*)|*.*",
-                CheckFileExists = true,
-                Multiselect = false
-            };
-            if (dialog.ShowDialog() == true)
-            {
-                ViewModel.SystemResourcePath = dialog.FileName;
-                ViewModel.ReloadIcons();
-            }
         }
 
         private void BrowseScanRoot_Click(object sender, RoutedEventArgs e)
@@ -75,17 +55,17 @@ namespace Revenant_Theme_Studio
             ViewModel.ApplyDriveIcon();
         }
 
-        private void ApplyShellIcon_Click(object sender, RoutedEventArgs e)
+        private void ApplySystemIcon_Click(object sender, RoutedEventArgs e)
         {
             if (!EnsureConsent()) return;
-            ViewModel.ApplyShellIcon();
+            ViewModel.ApplySystemIcon();
         }
 
         private void UndoLastChange_Click(object sender, RoutedEventArgs e)
             => ViewModel.UndoLastChange();
 
-        private void RestoreShellDefault_Click(object sender, RoutedEventArgs e)
-            => ViewModel.RestoreSelectedShellDefault();
+        private void RestoreSystemDefault_Click(object sender, RoutedEventArgs e)
+            => ViewModel.RestoreSelectedSystemDefault();
 
         private void CancelAutoMatch_Click(object sender, RoutedEventArgs e)
             => ViewModel.CancelAutoMatch();

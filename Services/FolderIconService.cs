@@ -80,16 +80,29 @@ namespace Revenant_Theme_Studio.Services
 
         private static void RefreshShell(string folderPath)
         {
-            var p = Marshal.StringToHGlobalUni(folderPath);
+            var pFolder = Marshal.StringToHGlobalUni(folderPath);
+            var parentPath = Path.GetDirectoryName(folderPath);
+            var pParent = parentPath != null ? Marshal.StringToHGlobalUni(parentPath) : IntPtr.Zero;
             try
             {
-                SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, p, IntPtr.Zero);
-                SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_PATHW, p, IntPtr.Zero);
+                // Notify the folder itself
+                SHChangeNotify(SHCNE_UPDATEITEM, SHCNF_PATHW, pFolder, IntPtr.Zero);
+                SHChangeNotify(SHCNE_UPDATEDIR,  SHCNF_PATHW, pFolder, IntPtr.Zero);
+
+                // Notify the parent — Explorer watches the parent directory and
+                // re-reads children (including icon state) when the parent is updated.
+                // Without this, Explorer's icon cache ignores the desktop.ini change
+                // until something else triggers a refresh.
+                if (pParent != IntPtr.Zero)
+                    SHChangeNotify(SHCNE_UPDATEDIR, SHCNF_PATHW, pParent, IntPtr.Zero);
+
+                // Broadcast global association change to flush icon cache
                 SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, IntPtr.Zero, IntPtr.Zero);
             }
             finally
             {
-                Marshal.FreeHGlobal(p);
+                Marshal.FreeHGlobal(pFolder);
+                if (pParent != IntPtr.Zero) Marshal.FreeHGlobal(pParent);
             }
         }
     }

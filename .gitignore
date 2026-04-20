@@ -15,3 +15,14 @@ obj/
 **/obj/
 desktop.ini
 build-warnings.txt
+
+# Claude Code agent scratch — worktrees, session state, etc.
+# Anything Claude drops in here is ephemeral and must never be tracked
+# OR picked up by the build (see DefaultItemExcludes in the csproj).
+.claude/
+
+# Visual Studio IDE state
+.vs/
+
+# Large asset source archive — the extracted files in Assets/ are the source of truth.
+Assets/Assets.zip

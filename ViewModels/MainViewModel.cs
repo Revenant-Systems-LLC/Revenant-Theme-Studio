@@ -7,7 +7,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Media.Imaging;
 using Revenant_Theme_Studio.Models;
 using Revenant_Theme_Studio.Services;
 
@@ -17,38 +16,41 @@ namespace Revenant_Theme_Studio.ViewModels
     {
         private readonly FolderIconService _folderIconService = new();
         private readonly IconMatchingService _matchingService = new();
-        private readonly SystemIconResourceService _systemIconService = new();
         private readonly ManagedStorageService _storageService = new();
         private readonly ChangeHistoryService _historyService;
         private readonly DriveIconService _driveIconService = new();
         private readonly ShellIconService _shellIconService = new();
 
-        private string _iconFolder = string.Empty;
         private string _selectedFolder = string.Empty;
-        private IconChoice? _selectedIcon;
         private string _statusMessage = "Ready.";
-        private string _systemResourcePath = string.Empty;
-        private bool _includeSystemIcons;
         private string _scanRoot = string.Empty;
         private bool _isAutoRunning;
         private string _autoProgressText = string.Empty;
         private MatchStrictness _autoStrictness = MatchStrictness.Strict;
         private string _selectedDrive = "C:";
-        private string _selectedShellTarget = "Desktop";
+        private string _selectedSystemTarget = "Desktop";
         private string _advancedNote = "Direct system resource patching is advanced-only and intentionally not automated.";
         private CancellationTokenSource? _autoCts;
 
-        public ObservableCollection<IconChoice> IconList { get; } = new();
+        // ── Per-tab icon pickers ─────────────────────────────────────────────
+        // Three independent picker view-models; each tab binds its rail to
+        // exactly one. No shared SelectedIcon means switching tabs never
+        // silently changes what's about to be applied.
+        public TabIconPickerViewModel FolderIconPicker { get; }
+        public TabIconPickerViewModel DriveIconPicker { get; }
+        public TabIconPickerViewModel SystemIconPicker { get; }
+
+        // Auto Match results — these are tab-local so we keep them on MVM
         public ObservableCollection<AutoMatchResult> AppliedAutomatically { get; } = new();
         public ObservableCollection<AutoMatchResult> OurBestGuess { get; } = new();
         public ObservableCollection<AutoMatchResult> UsedDefaultIcon { get; } = new();
         public ObservableCollection<AutoMatchResult> Skipped { get; } = new();
-        public ObservableCollection<string> ShellTargets { get; }
+
+        // System (formerly "Shell") icon target list — read off ShellIconService
+        public ObservableCollection<string> SystemTargets { get; }
 
         // ── License ──────────────────────────────────────────────────────────
         public bool IsProUnlocked => LicenseService.Instance.IsPro;
-
-        /// Call after a successful activation to refresh bound UI.
         public void NotifyLicenseActivated()
         {
             OnPropertyChanged(nameof(IsProUnlocked));
@@ -59,58 +61,44 @@ namespace Revenant_Theme_Studio.ViewModels
         {
             _historyService = new ChangeHistoryService(_storageService);
             _matchingService.SetIconFolders();
-            SystemResourcePath = Environment.ExpandEnvironmentVariables(@"%SystemRoot%\SystemResources\imageres.dll.mun");
-            ShellTargets = new ObservableCollection<string>(_shellIconService.Targets.Keys.OrderBy(x => x));
-            ReloadIcons();
+
+            FolderIconPicker = new TabIconPickerViewModel("Folder", requiresProForGunmetal: true)
+            {
+                OnStatusMessage = msg => StatusMessage = msg
+            };
+            DriveIconPicker = new TabIconPickerViewModel("Drive", requiresProForGunmetal: true)
+            {
+                OnStatusMessage = msg => StatusMessage = msg
+            };
+            SystemIconPicker = new TabIconPickerViewModel("System", requiresProForGunmetal: true)
+            {
+                OnStatusMessage = msg => StatusMessage = msg
+            };
+
+            SystemTargets = new ObservableCollection<string>(_shellIconService.Targets.Keys.OrderBy(x => x));
         }
+
         // ── Properties ───────────────────────────────────────────────────────
-        public string IconFolder
+        public string SelectedFolder
         {
-            get => _iconFolder;
-            set
-            {
-                // Gunmetal theme is Pro-only
-                if (!string.IsNullOrEmpty(value) &&
-                    value.Contains("gunmetal-theme", StringComparison.OrdinalIgnoreCase) &&
-                    !LicenseService.Instance.IsPro)
-                {
-                    StatusMessage = "Gunmetal theme requires RTS Pro. Enter your license key to unlock.";
-                    return;
-                }
-                _iconFolder = value;
-                OnPropertyChanged();
-                _matchingService.SetIconFolders(_iconFolder);
-                ReloadIcons();
-            }
+            get => _selectedFolder;
+            set { _selectedFolder = value; OnPropertyChanged(); OnPropertyChanged(nameof(CurrentFolderIconReference)); }
         }
-
-        public string SystemResourcePath { get => _systemResourcePath; set { _systemResourcePath = value; OnPropertyChanged(); } }
-
-        public bool IncludeSystemIcons
-        {
-            get => _includeSystemIcons;
-            set
-            {
-                if (value && !LicenseService.Instance.IsPro)
-                {
-                    StatusMessage = "System icon browser requires RTS Pro.";
-                    return;
-                }
-                _includeSystemIcons = value;
-                OnPropertyChanged();
-                ReloadIcons();
-            }
-        }
-
-        public string SelectedFolder { get => _selectedFolder; set { _selectedFolder = value; OnPropertyChanged(); OnPropertyChanged(nameof(CurrentFolderIconReference)); } }
-        public IconChoice? SelectedIcon { get => _selectedIcon; set { _selectedIcon = value; OnPropertyChanged(); } }
         public string StatusMessage { get => _statusMessage; set { _statusMessage = value; OnPropertyChanged(); } }
         public string ScanRoot { get => _scanRoot; set { _scanRoot = value; OnPropertyChanged(); } }
         public bool IsAutoRunning { get => _isAutoRunning; set { _isAutoRunning = value; OnPropertyChanged(); } }
         public string AutoProgressText { get => _autoProgressText; set { _autoProgressText = value; OnPropertyChanged(); } }
         public MatchStrictness AutoStrictness { get => _autoStrictness; set { _autoStrictness = value; OnPropertyChanged(); } }
-        public string SelectedDrive { get => _selectedDrive; set { _selectedDrive = value; OnPropertyChanged(); OnPropertyChanged(nameof(CurrentDriveIconReference)); } }
-        public string SelectedShellTarget { get => _selectedShellTarget; set { _selectedShellTarget = value; OnPropertyChanged(); OnPropertyChanged(nameof(CurrentShellIconReference)); } }
+        public string SelectedDrive
+        {
+            get => _selectedDrive;
+            set { _selectedDrive = value; OnPropertyChanged(); OnPropertyChanged(nameof(CurrentDriveIconReference)); }
+        }
+        public string SelectedSystemTarget
+        {
+            get => _selectedSystemTarget;
+            set { _selectedSystemTarget = value; OnPropertyChanged(); OnPropertyChanged(nameof(CurrentSystemIconReference)); }
+        }
         public string AdvancedNote { get => _advancedNote; set { _advancedNote = value; OnPropertyChanged(); } }
 
         public string CurrentFolderIconReference => string.IsNullOrWhiteSpace(SelectedFolder) || !Directory.Exists(SelectedFolder)
@@ -118,67 +106,33 @@ namespace Revenant_Theme_Studio.ViewModels
             : _folderIconService.GetCurrentIconReference(SelectedFolder) ?? "Default system icon";
 
         public string CurrentDriveIconReference => _driveIconService.GetCurrentIcon(SelectedDrive) ?? "Default system icon";
-        public string CurrentShellIconReference => _shellIconService.GetCurrentOverride(SelectedShellTarget) ?? "Default system icon";
+        public string CurrentSystemIconReference => _shellIconService.GetCurrentOverride(SelectedSystemTarget) ?? "Default system icon";
 
-        // ── Icon Loading ──────────────────────────────────────────────────────
-        public void ReloadIcons()
-        {
-            IconList.Clear();
-            var loadedFromFolders = 0;
-            var loadedFromSystemResource = 0;
-
-            if (!string.IsNullOrWhiteSpace(_iconFolder) && Directory.Exists(_iconFolder))
-            {
-                foreach (var iconPath in _matchingService.GetAllIcons())
-                {
-                    if (!TryCreateFileIconChoice(iconPath, out var iconChoice)) continue;
-                    IconList.Add(iconChoice);
-                    loadedFromFolders++;
-                }
-            }
-
-            if (IncludeSystemIcons && !string.IsNullOrWhiteSpace(SystemResourcePath) && File.Exists(SystemResourcePath))
-            {
-                foreach (var iconChoice in _systemIconService.LoadIcons(SystemResourcePath))
-                {
-                    IconList.Add(iconChoice);
-                    loadedFromSystemResource++;
-                }
-            }
-
-            StatusMessage = loadedFromFolders == 0 && loadedFromSystemResource == 0
-                ? "No icons were loaded. Select an icon folder and/or system resource path."
-                : $"Loaded {loadedFromFolders} file icons and {loadedFromSystemResource} system icons.";
-        }
-
-        // ── Free Features ─────────────────────────────────────────────────────
+        // ── Apply: Folder ────────────────────────────────────────────────────
         public void ApplyFolderIcon()
         {
-            if (string.IsNullOrWhiteSpace(SelectedFolder) || !Directory.Exists(SelectedFolder) || SelectedIcon == null)
+            var picked = FolderIconPicker.SelectedIcon;
+            if (string.IsNullOrWhiteSpace(SelectedFolder) || !Directory.Exists(SelectedFolder) || picked == null)
             {
-                StatusMessage = "Select a valid folder and icon.";
+                StatusMessage = "Select a valid folder and an icon from the Folder Icons rail.";
                 return;
             }
 
             try
             {
-                var source  = SelectedIcon.ResourcePath;
-                var managed = File.Exists(source) && source.EndsWith(".ico", StringComparison.OrdinalIgnoreCase)
-                    ? _storageService.ImportIcon(source)
-                    : source;
-
-                var previous     = _folderIconService.GetCurrentIconReference(SelectedFolder);
-                var newReference = $"\"{managed}\",{SelectedIcon.ResourceIndex}";
+                var managed = ImportIfFile(picked);
+                var previous = _folderIconService.GetCurrentIconReference(SelectedFolder);
+                var newReference = $"\"{managed}\",{picked.ResourceIndex}";
                 _folderIconService.ApplyIconReference(SelectedFolder, newReference);
 
                 _historyService.Record(new ChangeRecord
                 {
-                    BackupId     = Guid.NewGuid().ToString("N"),
-                    TargetType   = IconTargetType.Folder,
-                    TargetPath   = SelectedFolder,
+                    BackupId      = Guid.NewGuid().ToString("N"),
+                    TargetType    = IconTargetType.Folder,
+                    TargetPath    = SelectedFolder,
                     PreviousValue = previous,
-                    NewValue     = newReference,
-                    Timestamp    = DateTimeOffset.UtcNow
+                    NewValue      = newReference,
+                    Timestamp     = DateTimeOffset.UtcNow
                 });
 
                 StatusMessage = "Folder icon applied safely.";
@@ -190,34 +144,54 @@ namespace Revenant_Theme_Studio.ViewModels
             }
         }
 
+        // ── Apply: Drive ─────────────────────────────────────────────────────
         public void ApplyDriveIcon()
         {
-            if (SelectedIcon == null) { StatusMessage = "Select an icon first."; return; }
-            var source   = SelectedIcon.ResourcePath;
-            var managed  = File.Exists(source) && source.EndsWith(".ico", StringComparison.OrdinalIgnoreCase) ? _storageService.ImportIcon(source) : source;
-            var iconRef  = $"\"{managed}\",{SelectedIcon.ResourceIndex}";
+            var picked = DriveIconPicker.SelectedIcon;
+            if (picked == null) { StatusMessage = "Select an icon from the Drive Icons rail."; return; }
+
+            var managed  = ImportIfFile(picked);
+            var iconRef  = $"\"{managed}\",{picked.ResourceIndex}";
             var previous = _driveIconService.GetCurrentIcon(SelectedDrive);
             _driveIconService.ApplyIcon(SelectedDrive, iconRef);
-            _historyService.Record(new ChangeRecord { BackupId = Guid.NewGuid().ToString("N"), TargetType = IconTargetType.Drive, TargetPath = SelectedDrive, PreviousValue = previous, NewValue = iconRef, Timestamp = DateTimeOffset.UtcNow });
+            _historyService.Record(new ChangeRecord
+            {
+                BackupId      = Guid.NewGuid().ToString("N"),
+                TargetType    = IconTargetType.Drive,
+                TargetPath    = SelectedDrive,
+                PreviousValue = previous,
+                NewValue      = iconRef,
+                Timestamp     = DateTimeOffset.UtcNow
+            });
             StatusMessage = $"Drive {SelectedDrive} icon updated.";
             OnPropertyChanged(nameof(CurrentDriveIconReference));
         }
 
-        // ── Pro-Gated Features ────────────────────────────────────────────────
-        public void ApplyShellIcon()
+        // ── Apply: System (formerly Shell) ───────────────────────────────────
+        public void ApplySystemIcon()
         {
-            if (!LicenseService.Instance.IsPro) { StatusMessage = "Shell icon overrides require RTS Pro."; return; }
-            if (SelectedIcon == null) { StatusMessage = "Select an icon first."; return; }
-            var source   = SelectedIcon.ResourcePath;
-            var managed  = File.Exists(source) && source.EndsWith(".ico", StringComparison.OrdinalIgnoreCase) ? _storageService.ImportIcon(source) : source;
-            var iconRef  = $"\"{managed}\",{SelectedIcon.ResourceIndex}";
-            var previous = _shellIconService.GetCurrentOverride(SelectedShellTarget);
-            _shellIconService.ApplyOverride(SelectedShellTarget, iconRef);
-            _historyService.Record(new ChangeRecord { BackupId = Guid.NewGuid().ToString("N"), TargetType = IconTargetType.Shell, TargetPath = SelectedShellTarget, PreviousValue = previous, NewValue = iconRef, Timestamp = DateTimeOffset.UtcNow });
-            StatusMessage = $"{SelectedShellTarget} icon override set (HKCU).";
-            OnPropertyChanged(nameof(CurrentShellIconReference));
+            if (!LicenseService.Instance.IsPro) { StatusMessage = "System icon overrides require RTS Pro."; return; }
+            var picked = SystemIconPicker.SelectedIcon;
+            if (picked == null) { StatusMessage = "Select an icon from the System Icons rail."; return; }
+
+            var managed  = ImportIfFile(picked);
+            var iconRef  = $"\"{managed}\",{picked.ResourceIndex}";
+            var previous = _shellIconService.GetCurrentOverride(SelectedSystemTarget);
+            _shellIconService.ApplyOverride(SelectedSystemTarget, iconRef);
+            _historyService.Record(new ChangeRecord
+            {
+                BackupId      = Guid.NewGuid().ToString("N"),
+                TargetType    = IconTargetType.Shell, // history schema unchanged for back-compat
+                TargetPath    = SelectedSystemTarget,
+                PreviousValue = previous,
+                NewValue      = iconRef,
+                Timestamp     = DateTimeOffset.UtcNow
+            });
+            StatusMessage = $"{SelectedSystemTarget} icon override set (HKCU).";
+            OnPropertyChanged(nameof(CurrentSystemIconReference));
         }
 
+        // ── Auto Match ───────────────────────────────────────────────────────
         public async Task RunAutoMatchAsync()
         {
             if (!LicenseService.Instance.IsPro) { StatusMessage = "Auto Match requires RTS Pro."; return; }
@@ -231,7 +205,7 @@ namespace Revenant_Theme_Studio.ViewModels
 
             IsAutoRunning = true;
             _autoCts = new CancellationTokenSource();
-            var token  = _autoCts.Token;
+            var token   = _autoCts.Token;
             var scanned = 0;
 
             try
@@ -252,8 +226,22 @@ namespace Revenant_Theme_Studio.ViewModels
                                 var previous  = _folderIconService.GetCurrentIconReference(dir);
                                 var reference = $"\"{managed}\",0";
                                 _folderIconService.ApplyIconReference(dir, reference);
-                                _historyService.Record(new ChangeRecord { BackupId = Guid.NewGuid().ToString("N"), TargetType = IconTargetType.Folder, TargetPath = dir, PreviousValue = previous, NewValue = reference, Timestamp = DateTimeOffset.UtcNow });
-                                App.Current.Dispatcher.Invoke(() => AppliedAutomatically.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, SuggestedIcon = Path.GetFileName(decision.IconPath), Reason = decision.Reason ?? "Applied." }));
+                                _historyService.Record(new ChangeRecord
+                                {
+                                    BackupId      = Guid.NewGuid().ToString("N"),
+                                    TargetType    = IconTargetType.Folder,
+                                    TargetPath    = dir,
+                                    PreviousValue = previous,
+                                    NewValue      = reference,
+                                    Timestamp     = DateTimeOffset.UtcNow
+                                });
+                                App.Current.Dispatcher.Invoke(() => AppliedAutomatically.Add(new AutoMatchResult
+                                {
+                                    FolderName    = folderName,
+                                    TargetPath    = dir,
+                                    SuggestedIcon = Path.GetFileName(decision.IconPath),
+                                    Reason        = decision.Reason ?? "Applied."
+                                }));
                             }
                             else
                             {
@@ -307,34 +295,31 @@ namespace Revenant_Theme_Studio.ViewModels
             StatusMessage = $"Undid last change: {last.TargetType} {last.TargetPath}";
             OnPropertyChanged(nameof(CurrentFolderIconReference));
             OnPropertyChanged(nameof(CurrentDriveIconReference));
-            OnPropertyChanged(nameof(CurrentShellIconReference));
+            OnPropertyChanged(nameof(CurrentSystemIconReference));
         }
 
-        public void RestoreSelectedShellDefault()
+        public void RestoreSelectedSystemDefault()
         {
-            _shellIconService.RestoreDefault(SelectedShellTarget);
-            StatusMessage = $"Removed per-user override for {SelectedShellTarget}.";
-            OnPropertyChanged(nameof(CurrentShellIconReference));
+            _shellIconService.RestoreDefault(SelectedSystemTarget);
+            StatusMessage = $"Removed per-user override for {SelectedSystemTarget}.";
+            OnPropertyChanged(nameof(CurrentSystemIconReference));
         }
 
         public void CancelAutoMatch() => _autoCts?.Cancel();
 
         // ── Helpers ───────────────────────────────────────────────────────────
-        private static bool TryCreateFileIconChoice(string iconPath, out IconChoice iconChoice)
+
+        /// <summary>
+        /// Copies the chosen .ico into managed storage so the registry path
+        /// stays valid even if the user moves their library folder later.
+        /// Non-.ico sources (e.g. system resources via index) pass through.
+        /// </summary>
+        private string ImportIfFile(IconChoice picked)
         {
-            iconChoice = null!;
-            try
-            {
-                var preview = new BitmapImage();
-                preview.BeginInit();
-                preview.UriSource    = new Uri(iconPath, UriKind.Absolute);
-                preview.CacheOption  = BitmapCacheOption.OnLoad;
-                preview.EndInit();
-                preview.Freeze();
-                iconChoice = new IconChoice { ResourcePath = iconPath, ResourceIndex = 0, DisplayName = Path.GetFileNameWithoutExtension(iconPath), PreviewImage = preview };
-                return true;
-            }
-            catch { return false; }
+            var source = picked.ResourcePath;
+            return File.Exists(source) && source.EndsWith(".ico", StringComparison.OrdinalIgnoreCase)
+                ? _storageService.ImportIcon(source)
+                : source;
         }
 
         private static IEnumerable<string> SafeEnumerateDirectories(string root, CancellationToken token)
@@ -366,11 +351,6 @@ namespace Revenant_Theme_Studio.ViewModels
         }
 
         // ── App-close archive ─────────────────────────────────────────────────
-        /// <summary>
-        /// Copies all applied drive/shell icon files to ProgramData so registry
-        /// references stay valid even if source files are later moved or deleted.
-        /// Called from MainWindow.OnClosing — non-fatal on any error.
-        /// </summary>
         public void ArchiveIconsToProgramData()
         {
             try

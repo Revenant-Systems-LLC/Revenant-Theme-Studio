@@ -21,24 +21,37 @@ namespace Revenant_Theme_Studio.Services
             "Revenant Theme Studio",
             "registry_snapshot.json");
 
-        private static readonly string[] WatchedKeys = new[]
+        // Non-shell watched roots. The shell-target keys are pulled
+        // dynamically from ShellIconService so the two stay in sync.
+        private static readonly string[] StaticWatchedKeys = new[]
         {
-            // Drive and shell icon overrides
             @"Software\Microsoft\Windows\CurrentVersion\Explorer\DriveIcons",
             @"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons",
+        };
 
-            // Shell namespace CLSIDs (HKCU\Software\Classes)
-            @"Software\Classes\CLSID\{20D04FE0-3AEA-1069-A2D8-08002B30309D}\DefaultIcon",
-            @"Software\Classes\CLSID\{031E4825-7B94-4dc3-B131-E946B44C8DD5}\DefaultIcon",
+        private static IEnumerable<string> WatchedKeys
+        {
+            get
+            {
+                foreach (var k in StaticWatchedKeys) yield return k;
 
-            // Windows Library folder icons (HKCU\CLSID — per-user shell namespace)
-            @"CLSID\{0DB7E03F-FC29-4DC6-9020-FF41B59E513A}\DefaultIcon",  // 3D Objects
-            @"CLSID\{B4BFCC3A-DB2C-424C-B029-7FE99A87C641}\DefaultIcon",  // Desktop
-            @"CLSID\{d3162b92-9365-467a-956b-92703aca08af}\DefaultIcon",  // Documents
-            @"CLSID\{088e3905-0323-4b02-9826-5d99428e115f}\DefaultIcon",  // Downloads
-            @"CLSID\{3dfdf296-dbec-4fb4-81d1-6a3438bcf4de}\DefaultIcon",  // Music
-            @"CLSID\{24ad3ad4-a569-4530-98e1-ab02f9417aa8}\DefaultIcon",  // Pictures
-            @"CLSID\{f86fa3ab-70d2-4fc7-9c99-fcbf05467f3a}\DefaultIcon",  // Videos
+                // Mirror every shell target the ShellIconService knows about,
+                // including the secondary CLSIDs (e.g. Control Panel category view).
+                var svc = new ShellIconService();
+                foreach (var spec in svc.Targets.Values)
+                {
+                    yield return BuildShellTargetPath(spec.Scope, spec.Clsid);
+                    if (!string.IsNullOrEmpty(spec.SecondaryClsid))
+                        yield return BuildShellTargetPath(spec.Scope, spec.SecondaryClsid!);
+                }
+            }
+        }
+
+        private static string BuildShellTargetPath(ShellIconService.ShellRegistryScope scope, string clsid) => scope switch
+        {
+            ShellIconService.ShellRegistryScope.LibraryShort => $@"CLSID\{clsid}\DefaultIcon",
+            ShellIconService.ShellRegistryScope.HkcrOverride => $@"Software\Classes\CLSID\{clsid}\DefaultIcon",
+            _ => throw new InvalidOperationException($"Unknown scope: {scope}")
         };
 
         private RegistrySnapshotService() { }

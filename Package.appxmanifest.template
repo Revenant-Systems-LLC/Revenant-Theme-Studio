@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  MSIX Package Manifest — Revenant Theme Studio
+  ================================================
+  SETUP INSTRUCTIONS:
+  1. In Visual Studio: Add > New Project > Windows Application Packaging Project (.wapproj)
+  2. In that project, replace the generated Package.appxmanifest with this content.
+  3. Set the Publisher value to EXACTLY what appears in your Partner Center account under
+     Account Settings > Legal Info > Publisher display name / Publisher ID.
+     The CN= value must match your code signing certificate subject exactly.
+  4. Add required logo assets to the packaging project's Assets\ folder (see sizes below).
+  5. Reference the RTS .csproj as the Application in the packaging project.
+
+  REQUIRED LOGO ASSETS (PNG, transparent background recommended):
+    Assets\Square44x44Logo.png       — 44x44, 55x55, 66x66, 88x88, 176x176
+    Assets\Square150x150Logo.png     — 150x150, 300x300
+    Assets\Wide310x150Logo.png       — 310x150, 620x300
+    Assets\Square310x310Logo.png     — 310x310, 620x620
+    Assets\StoreLogo.png             — 50x50
+    Assets\SplashScreen.png          — 620x300
+
+  Use rts_app.ico / rsllc_logo.ico from IconEngine\icons\Logos\ as your source art.
+
+  IMPORTANT — REGISTRY WRITES UNDER MSIX:
+  This app writes to HKCU (DriveIconService, ShellIconService). Under Desktop Bridge / runFullTrust,
+  HKCU writes go to the REAL user hive, not a virtualized location. Test these after packaging.
+  FolderIconService writes desktop.ini to user-owned folders — this works under runFullTrust.
+  Neither service touches HKLM or system files, so no admin elevation is needed.
+-->
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap rescap">
+
+  <Identity
+    Name="RevenantSystemsLLC.RevenantThemeStudio"
+    Publisher="CN=Revenant Systems LLC"
+    Version="1.0.0.0"
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>Revenant Theme Studio</DisplayName>
+    <PublisherDisplayName>Revenant Systems LLC</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22000.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-US" />
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="Revenant-Theme-Studio\Revenant-Theme-Studio.exe"
+      EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="Revenant Theme Studio"
+        Description="Custom folder, drive, and shell icon manager for Windows."
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile
+          Wide310x150Logo="Assets\Wide310x150Logo.png"
+          Square310x310Logo="Assets\Square310x310Logo.png"
+          ShortName="RTS" />
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- Required for desktop.ini writes, registry access, and file system operations -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+
+</Package>

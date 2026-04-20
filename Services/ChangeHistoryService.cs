@@ -11,6 +11,7 @@ namespace Revenant_Theme_Studio.Services
     {
         private readonly string _historyPath;
         private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
+        private readonly object _fileLock = new();
 
         public ChangeHistoryService(ManagedStorageService storage)
         {
@@ -19,26 +20,43 @@ namespace Revenant_Theme_Studio.Services
 
         public IReadOnlyList<ChangeRecord> GetAll()
         {
-            if (!File.Exists(_historyPath)) return [];
-            var json = File.ReadAllText(_historyPath);
-            return JsonSerializer.Deserialize<List<ChangeRecord>>(json) ?? [];
+            lock (_fileLock)
+            {
+                if (!File.Exists(_historyPath)) return [];
+                var json = File.ReadAllText(_historyPath);
+                return JsonSerializer.Deserialize<List<ChangeRecord>>(json) ?? [];
+            }
         }
 
         public ChangeRecord? GetLast() => GetAll().LastOrDefault();
 
         public void Record(ChangeRecord record)
         {
-            var all = GetAll().ToList();
-            all.Add(record);
-            File.WriteAllText(_historyPath, JsonSerializer.Serialize(all, _jsonOptions));
+            lock (_fileLock)
+            {
+                var all = ReadUnsafe().ToList();
+                all.Add(record);
+                File.WriteAllText(_historyPath, JsonSerializer.Serialize(all, _jsonOptions));
+            }
         }
 
         public void RemoveLast()
         {
-            var all = GetAll().ToList();
-            if (all.Count == 0) return;
-            all.RemoveAt(all.Count - 1);
-            File.WriteAllText(_historyPath, JsonSerializer.Serialize(all, _jsonOptions));
+            lock (_fileLock)
+            {
+                var all = ReadUnsafe().ToList();
+                if (all.Count == 0) return;
+                all.RemoveAt(all.Count - 1);
+                File.WriteAllText(_historyPath, JsonSerializer.Serialize(all, _jsonOptions));
+            }
+        }
+
+        // Call only while holding _fileLock
+        private List<ChangeRecord> ReadUnsafe()
+        {
+            if (!File.Exists(_historyPath)) return [];
+            var json = File.ReadAllText(_historyPath);
+            return JsonSerializer.Deserialize<List<ChangeRecord>>(json) ?? [];
         }
     }
 }

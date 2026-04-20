@@ -1,0 +1,73 @@
+<Window x:Class="Revenant_Theme_Studio.LicenseKeyWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Unlock RTS Pro"
+        Height="260" Width="560"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner"
+        Foreground="#997a4c">
+
+    <Window.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#002414" Offset="0"/>
+            <GradientStop Color="#000a05" Offset="1"/>
+        </LinearGradientBrush>
+    </Window.Background>
+
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Background"      Value="#002414"/>
+            <Setter Property="Foreground"      Value="#997a4c"/>
+            <Setter Property="BorderBrush"     Value="#4a3a20"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="18,7"/>
+            <Setter Property="Margin"          Value="0,0,8,0"/>
+            <Setter Property="FontFamily"      Value="Consolas"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background"  Value="#00422a"/>
+                    <Setter Property="BorderBrush" Value="#997a4c"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Background"      Value="#000d07"/>
+            <Setter Property="Foreground"      Value="#997a4c"/>
+            <Setter Property="BorderBrush"     Value="#4a3a20"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="10,7"/>
+            <Setter Property="FontFamily"      Value="Consolas"/>
+            <Setter Property="FontSize"        Value="14"/>
+            <Setter Property="CaretBrush"      Value="#C4962B"/>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#00422a" BorderThickness="1" Margin="1">
+        <StackPanel Margin="28,24,28,24">
+
+            <TextBlock Text="UNLOCK RTS PRO"
+                       FontFamily="Consolas" FontSize="16" FontWeight="Bold"
+                       Foreground="#997a4c" Margin="0,0,0,4"/>
+
+            <Border Width="260" Height="1" Background="#00422a"
+                    HorizontalAlignment="Left" Margin="0,0,0,16"/>
+
+            <TextBlock Text="Format: RTSP-XXXXXXXX-XXXXXXXX-XXXXXXXX"
+                       Foreground="#4a3a20" FontFamily="Consolas" FontSize="11"
+                       Margin="0,0,0,10"/>
+
+            <TextBox Text="{Binding KeyInput, UpdateSourceTrigger=PropertyChanged}"
+                     MaxLength="35" CharacterCasing="Upper"/>
+
+            <TextBlock Text="{Binding StatusMessage}"
+                       Margin="0,10,0,0" FontFamily="Consolas" FontSize="12"
+                       Foreground="{Binding StatusColor}"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                <Button Content="Activate" Click="Activate_Click" Width="120"/>
+                <Button Content="Cancel"   Click="Cancel_Click"   Width="100"/>
+            </StackPanel>
+
+        </StackPanel>
+    </Border>
+</Window>

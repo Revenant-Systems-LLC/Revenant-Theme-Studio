@@ -9,13 +9,27 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>IconEngine\icons\Logos\rts_app.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\rts_app.ico</ApplicationIcon>
+    <!--
+      Exclude Claude Code agent scratch directories from EVERY default item
+      glob (Compile, Page, Resource, ApplicationDefinition, None, Embedded-
+      Resource, ...). DefaultItemExcludes is an MSBuild property — unlike
+      per-item <Remove/> entries, it's inherited by WPF's MarkupCompilePass1
+      _wpftmp.csproj. Without this, any leftover worktree under
+      .claude\worktrees\ gets re-globbed by the WPF temp project and
+      poisons the build with stale duplicates of services/views.
+
+      Keep this here even when no worktrees are present — agent runs may
+      drop new ones in at any time and this makes the project bulletproof.
+    -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);.claude\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="IconEngine\**\*" />
-    <None Remove="IconEngine\icons\Logos\rts_app.ico" />
-    <Resource Include="IconEngine\icons\Logos\rts_app.ico" />
+    <None Remove="Assets\rts_app.ico" />
+    <!-- Branding assets — embedded as WPF pack resources -->
+    <Resource Include="Assets\**\*" />
   </ItemGroup>
 
 </Project>
