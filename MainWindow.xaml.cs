@@ -1,6 +1,9 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
 using Microsoft.Win32;
+using Revenant_Theme_Studio.Models;
 using Revenant_Theme_Studio.Services;
 using Revenant_Theme_Studio.ViewModels;
 
@@ -77,17 +80,49 @@ namespace Revenant_Theme_Studio
                 ViewModel.NotifyLicenseActivated();
         }
 
-        private async void RunAutoMatch_Click(object sender, RoutedEventArgs e)
+        private async void Arise_Click(object sender, RoutedEventArgs e)
         {
             var scanRoot = ViewModel.ScanRoot;
-            if (string.IsNullOrWhiteSpace(scanRoot)) { await ViewModel.RunAutoMatchAsync(); return; }
+            if (string.IsNullOrWhiteSpace(scanRoot)) { await ViewModel.AriseAsync(); return; }
 
             var result = MessageBox.Show(
-                $"Scan root:\n{scanRoot}\n\nOnly strong matches will be applied. Unmatched folders are skipped.\n\nContinue?",
-                "Run Auto Match", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                $"Scan root:\n{scanRoot}\n\nThis is a DRY RUN — nothing will be written yet.\nReview the results, bind icons where needed, then Arise each box to commit.\n\nContinue?",
+                "Arise — Dry Run", MessageBoxButton.YesNo, MessageBoxImage.Question);
 
             if (result == MessageBoxResult.Yes)
-                await ViewModel.RunAutoMatchAsync();
+                await ViewModel.AriseAsync();
+        }
+
+        private void BindSelected_Click(object sender, RoutedEventArgs e)   => ViewModel.BindSelected();
+        private void UnbindSelected_Click(object sender, RoutedEventArgs e) => ViewModel.UnbindSelected();
+
+        private void AriseApplied_Click(object sender, RoutedEventArgs e)
+            => ViewModel.AriseBox(ViewModel.AppliedAutomatically, "Applied Automatically");
+        private void AriseBestGuess_Click(object sender, RoutedEventArgs e)
+            => ViewModel.AriseBox(ViewModel.OurBestGuess, "Best Guess");
+        private void AriseNoMatch_Click(object sender, RoutedEventArgs e)
+            => ViewModel.AriseBox(ViewModel.UsedDefaultIcon, "No Match");
+
+        // Mutual-exclusive selection across the four result ListBoxes: when
+        // any one changes selection, clear the others so there's exactly one
+        // SelectedAutoMatchResult at a time.
+        private bool _suppressAutoMatchSelectionSync;
+        private void AutoMatchResult_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_suppressAutoMatchSelectionSync) return;
+            if (sender is not ListBox lb) return;
+            if (lb.SelectedItem is not AutoMatchResult row) return;
+
+            _suppressAutoMatchSelectionSync = true;
+            try
+            {
+                foreach (var other in new[] { LbApplied, LbBestGuess, LbNoMatch, LbErrors })
+                {
+                    if (!ReferenceEquals(other, lb)) other.SelectedItem = null;
+                }
+                ViewModel.SelectedAutoMatchResult = row;
+            }
+            finally { _suppressAutoMatchSelectionSync = false; }
         }
     }
 }

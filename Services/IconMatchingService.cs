@@ -8,7 +8,7 @@ namespace Revenant_Theme_Studio.Services
 {
     public class IconMatchingService
     {
-        private static readonly string[] ReservedTokens = ["default", "thumb", "open", "froint", "backdefault"];
+        private static readonly string[] ReservedTokens = ["default", "thumb", "open", "front", "backdefault"];
 
         private string[] _iconFolders = Array.Empty<string>();
         private List<string> _cachedIcons = new();

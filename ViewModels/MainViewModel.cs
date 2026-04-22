@@ -24,6 +24,7 @@ namespace Revenant_Theme_Studio.ViewModels
         private string _selectedFolder = string.Empty;
         private string _statusMessage = "Ready.";
         private string _scanRoot = string.Empty;
+        private AutoMatchResult? _selectedAutoMatchResult;
         private bool _isAutoRunning;
         private string _autoProgressText = string.Empty;
         private MatchStrictness _autoStrictness = MatchStrictness.Strict;
@@ -39,6 +40,7 @@ namespace Revenant_Theme_Studio.ViewModels
         public TabIconPickerViewModel FolderIconPicker { get; }
         public TabIconPickerViewModel DriveIconPicker { get; }
         public TabIconPickerViewModel SystemIconPicker { get; }
+        public TabIconPickerViewModel AutoMatchIconPicker { get; }
 
         // Auto Match results — these are tab-local so we keep them on MVM
         public ObservableCollection<AutoMatchResult> AppliedAutomatically { get; } = new();
@@ -74,6 +76,15 @@ namespace Revenant_Theme_Studio.ViewModels
             {
                 OnStatusMessage = msg => StatusMessage = msg
             };
+            AutoMatchIconPicker = new TabIconPickerViewModel("AutoMatch", requiresProForGunmetal: true)
+            {
+                OnStatusMessage = msg => StatusMessage = msg
+            };
+            AutoMatchIconPicker.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(TabIconPickerViewModel.IconFolder))
+                    _matchingService.SetIconFolders(AutoMatchIconPicker.IconFolder);
+            };
 
             SystemTargets = new ObservableCollection<string>(_shellIconService.Targets.Keys.OrderBy(x => x));
         }
@@ -86,6 +97,11 @@ namespace Revenant_Theme_Studio.ViewModels
         }
         public string StatusMessage { get => _statusMessage; set { _statusMessage = value; OnPropertyChanged(); } }
         public string ScanRoot { get => _scanRoot; set { _scanRoot = value; OnPropertyChanged(); } }
+        public AutoMatchResult? SelectedAutoMatchResult
+        {
+            get => _selectedAutoMatchResult;
+            set { _selectedAutoMatchResult = value; OnPropertyChanged(); }
+        }
         public bool IsAutoRunning { get => _isAutoRunning; set { _isAutoRunning = value; OnPropertyChanged(); } }
         public string AutoProgressText { get => _autoProgressText; set { _autoProgressText = value; OnPropertyChanged(); } }
         public MatchStrictness AutoStrictness { get => _autoStrictness; set { _autoStrictness = value; OnPropertyChanged(); } }
@@ -192,7 +208,10 @@ namespace Revenant_Theme_Studio.ViewModels
         }
 
         // ── Auto Match ───────────────────────────────────────────────────────
-        public async Task RunAutoMatchAsync()
+        // "Arise" = dry-run scan. Produces a plan (four buckets of results).
+        // Nothing is written to the registry until the user clicks a per-box
+        // "Arise" button, which commits just that box.
+        public async Task AriseAsync()
         {
             if (!LicenseService.Instance.IsPro) { StatusMessage = "Auto Match requires RTS Pro."; return; }
             if (IsAutoRunning) return;
@@ -202,6 +221,7 @@ namespace Revenant_Theme_Studio.ViewModels
             OurBestGuess.Clear();
             UsedDefaultIcon.Clear();
             Skipped.Clear();
+            SelectedAutoMatchResult = null;
 
             IsAutoRunning = true;
             _autoCts = new CancellationTokenSource();
@@ -220,53 +240,141 @@ namespace Revenant_Theme_Studio.ViewModels
                         try
                         {
                             var decision = _matchingService.FindBestMatch(folderName, AutoStrictness);
-                            if (decision.Strength == MatchStrength.Strong && decision.IconPath != null)
+                            var (curPath, curIdx) = AutoMatchResult.ParseIconReference(_folderIconService.GetCurrentIconReference(dir));
+                            var curPreview = AutoMatchResult.LoadIcoPreview(curPath);
+                            App.Current.Dispatcher.Invoke(() =>
                             {
-                                var managed   = _storageService.ImportIcon(decision.IconPath);
-                                var previous  = _folderIconService.GetCurrentIconReference(dir);
-                                var reference = $"\"{managed}\",0";
-                                _folderIconService.ApplyIconReference(dir, reference);
-                                _historyService.Record(new ChangeRecord
+                                if (decision.Strength == MatchStrength.Strong && decision.IconPath != null)
                                 {
-                                    BackupId      = Guid.NewGuid().ToString("N"),
-                                    TargetType    = IconTargetType.Folder,
-                                    TargetPath    = dir,
-                                    PreviousValue = previous,
-                                    NewValue      = reference,
-                                    Timestamp     = DateTimeOffset.UtcNow
-                                });
-                                App.Current.Dispatcher.Invoke(() => AppliedAutomatically.Add(new AutoMatchResult
+                                    AppliedAutomatically.Add(new AutoMatchResult
+                                    {
+                                        FolderName         = folderName,
+                                        TargetPath         = dir,
+                                        Reason             = decision.Reason ?? "Strong match.",
+                                        CurrentIconPath    = curPath,
+                                        CurrentIconIndex   = curIdx,
+                                        CurrentIconPreview = curPreview,
+                                        AssignedIconPath   = decision.IconPath
+                                    });
+                                }
+                                else if (decision.Strength == MatchStrength.Weak && !string.IsNullOrWhiteSpace(decision.IconPath))
                                 {
-                                    FolderName    = folderName,
-                                    TargetPath    = dir,
-                                    SuggestedIcon = Path.GetFileName(decision.IconPath),
-                                    Reason        = decision.Reason ?? "Applied."
-                                }));
-                            }
-                            else
-                            {
-                                App.Current.Dispatcher.Invoke(() =>
+                                    OurBestGuess.Add(new AutoMatchResult
+                                    {
+                                        FolderName         = folderName,
+                                        TargetPath         = dir,
+                                        Reason             = decision.Reason ?? "Weak match — review.",
+                                        CurrentIconPath    = curPath,
+                                        CurrentIconIndex   = curIdx,
+                                        CurrentIconPreview = curPreview,
+                                        AssignedIconPath   = decision.IconPath
+                                    });
+                                }
+                                else
                                 {
-                                    if (decision.Strength == MatchStrength.Weak && !string.IsNullOrWhiteSpace(decision.IconPath))
-                                        OurBestGuess.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, SuggestedIcon = Path.GetFileName(decision.IconPath), Reason = decision.Reason ?? "Weak match — not applied." });
-                                    else
-                                        UsedDefaultIcon.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, SuggestedIcon = null, Reason = decision.Reason ?? "No safe match found — skipped." });
-                                });
-                            }
+                                    UsedDefaultIcon.Add(new AutoMatchResult
+                                    {
+                                        FolderName         = folderName,
+                                        TargetPath         = dir,
+                                        Reason             = decision.Reason ?? "No safe match.",
+                                        CurrentIconPath    = curPath,
+                                        CurrentIconIndex   = curIdx,
+                                        CurrentIconPreview = curPreview
+                                    });
+                                }
+                            });
                         }
                         catch (Exception ex)
                         {
-                            App.Current.Dispatcher.Invoke(() => Skipped.Add(new AutoMatchResult { FolderName = folderName, TargetPath = dir, Reason = ex.Message }));
+                            App.Current.Dispatcher.Invoke(() => Skipped.Add(new AutoMatchResult
+                            {
+                                FolderName = folderName,
+                                TargetPath = dir,
+                                Reason     = ex.Message
+                            }));
                         }
                         if (scanned % 25 == 0)
                             App.Current.Dispatcher.Invoke(() => AutoProgressText = $"Scanned {scanned} folders.");
                     }
                 }, token);
 
-                StatusMessage = $"Auto Match finished. Applied {AppliedAutomatically.Count}, best guesses {OurBestGuess.Count}, no match {UsedDefaultIcon.Count}, errors {Skipped.Count}.";
+                StatusMessage = $"Arise complete. Ready to bind: {AppliedAutomatically.Count} | review: {OurBestGuess.Count} | unbound: {UsedDefaultIcon.Count} | errors: {Skipped.Count}.";
             }
-            catch (OperationCanceledException) { StatusMessage = "Auto Match canceled."; }
+            catch (OperationCanceledException) { StatusMessage = "Arise canceled."; }
             finally { IsAutoRunning = false; _autoCts?.Dispose(); _autoCts = null; }
+        }
+
+        // Assign the rail's currently-selected icon to the currently-selected
+        // result row. Moves the row out of "Errors"/"No Match" into Best Guess.
+        public void BindSelected()
+        {
+            var row  = SelectedAutoMatchResult;
+            var icon = AutoMatchIconPicker.SelectedIcon;
+            if (row == null) { StatusMessage = "Select a folder row first."; return; }
+            if (icon == null || string.IsNullOrWhiteSpace(icon.ResourcePath) || !File.Exists(icon.ResourcePath))
+            {
+                StatusMessage = "Select an icon from the library rail first.";
+                return;
+            }
+            row.AssignedIconPath = icon.ResourcePath;
+
+            // Move unbound rows (errors / no-match) into Best Guess now that
+            // they have an icon assigned.
+            if (UsedDefaultIcon.Contains(row)) { UsedDefaultIcon.Remove(row); OurBestGuess.Add(row); }
+            else if (Skipped.Contains(row))    { Skipped.Remove(row);        OurBestGuess.Add(row); }
+
+            StatusMessage = $"Bound {row.FolderName} → {row.AssignedIconName}.";
+        }
+
+        public void UnbindSelected()
+        {
+            var row = SelectedAutoMatchResult;
+            if (row == null) { StatusMessage = "Select a folder row to unbind."; return; }
+            row.AssignedIconPath = null;
+            if (AppliedAutomatically.Contains(row)) { AppliedAutomatically.Remove(row); UsedDefaultIcon.Add(row); }
+            else if (OurBestGuess.Contains(row))    { OurBestGuess.Remove(row);        UsedDefaultIcon.Add(row); }
+            StatusMessage = $"Unbound {row.FolderName}.";
+        }
+
+        // "Arise" a single box: commit all bound rows in that box to the
+        // registry. Unbound rows are skipped. This is the only path that
+        // writes — the scan itself is dry-run.
+        public void AriseBox(ObservableCollection<AutoMatchResult> box, string boxName)
+        {
+            if (!LicenseService.Instance.IsPro) { StatusMessage = "Arise requires RTS Pro."; return; }
+            var applied = 0;
+            var skipped = 0;
+            var toRemove = new List<AutoMatchResult>();
+            foreach (var row in box.ToList())
+            {
+                if (string.IsNullOrEmpty(row.AssignedIconPath) || !File.Exists(row.AssignedIconPath))
+                { skipped++; continue; }
+                try
+                {
+                    var managed   = _storageService.ImportIcon(row.AssignedIconPath);
+                    var previous  = _folderIconService.GetCurrentIconReference(row.TargetPath);
+                    var reference = $"\"{managed}\",0";
+                    _folderIconService.ApplyIconReference(row.TargetPath, reference);
+                    _historyService.Record(new ChangeRecord
+                    {
+                        BackupId      = Guid.NewGuid().ToString("N"),
+                        TargetType    = IconTargetType.Folder,
+                        TargetPath    = row.TargetPath,
+                        PreviousValue = previous,
+                        NewValue      = reference,
+                        Timestamp     = DateTimeOffset.UtcNow
+                    });
+                    applied++;
+                    toRemove.Add(row);
+                }
+                catch (Exception ex)
+                {
+                    row.Reason = $"Arise failed: {ex.Message}";
+                    skipped++;
+                }
+            }
+            foreach (var r in toRemove) box.Remove(r);
+            StatusMessage = $"{boxName}: arose {applied}, skipped {skipped}.";
         }
 
         public void UndoLastChange()
