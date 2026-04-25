@@ -379,46 +379,136 @@
                 </TabItem.Header>
                 <Grid Margin="12">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="300"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                        <TextBlock Text="SCAN ROOT" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                            <TextBox Width="500" Text="{Binding ScanRoot}"/>
-                            <Button Content="Browse" Click="BrowseScanRoot_Click"/>
-                        </StackPanel>
-                        <TextBlock Text="Matching Mode: Strict (conservative)" Foreground="#6B5820" Margin="0,10,0,0" FontSize="12"/>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <Button Content="Run Auto Match" Width="160" Click="RunAutoMatch_Click"
-                                    IsEnabled="{Binding IsAutoRunning, Converter={StaticResource InverseBool}}"/>
-                            <Button Content="Cancel" Width="110" Click="CancelAutoMatch_Click"
-                                    IsEnabled="{Binding IsAutoRunning}"/>
-                        </StackPanel>
-                        <TextBlock Text="{Binding AutoProgressText}" Foreground="#6B5820" Margin="0,10,0,0"/>
-                    </StackPanel>
+
+                    <!-- Icon Library rail (reuses the same control as Folder/Drive/System tabs) -->
+                    <ctrls:IconLibraryRail Grid.Column="0" DataContext="{Binding AutoMatchIconPicker}"/>
+
+                    <!-- Right side: config + scan button, then the four result boxes -->
                     <Grid Grid.Column="1">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <GroupBox Header="Applied Automatically">
-                            <ListBox ItemsSource="{Binding AppliedAutomatically}" DisplayMemberPath="FolderName"/>
+
+                        <!-- Config row: Scan Root + Arise/Cancel + Bind/Unbind -->
+                        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                            <TextBlock Text="SCAN ROOT" FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+                            <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding ScanRoot}" Margin="0,0,6,0"/>
+                                <Button Grid.Column="1" Content="Browse" Click="BrowseScanRoot_Click"/>
+                            </Grid>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="Arise" Width="120" Style="{StaticResource GoldButton}" Click="Arise_Click"
+                                        ToolTip="Dry run — scan folders, build the plan, but write nothing"
+                                        IsEnabled="{Binding IsAutoRunning, Converter={StaticResource InverseBool}}"/>
+                                <Button Content="Cancel" Width="100" Click="CancelAutoMatch_Click"
+                                        IsEnabled="{Binding IsAutoRunning}"/>
+                                <Border Width="1" Background="#4a3a20" Margin="10,0,6,0"/>
+                                <Button Content="Bind"   Width="90"  Click="BindSelected_Click"
+                                        ToolTip="Bind the selected rail icon to the selected folder row"/>
+                                <Button Content="Unbind" Width="90"  Click="UnbindSelected_Click"
+                                        ToolTip="Clear the assignment on the selected folder row"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding AutoProgressText}" Foreground="#6B5820" Margin="0,6,0,0"/>
+                            <TextBlock Foreground="#6B5820" FontSize="11" Margin="0,4,0,0"
+                                       Text="Select a row in any box below, pick an icon in the rail, click Bind. Arise each box when ready."/>
+                        </StackPanel>
+
+                        <!-- Applied Automatically: pre-bound strong matches -->
+                        <GroupBox Grid.Row="1" Header="Applied Automatically — ready to Arise" Margin="0,0,0,8">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Bottom" Content="Arise — Applied" Margin="0,4,0,0"
+                                        Style="{StaticResource GoldButton}" Click="AriseApplied_Click"
+                                        ToolTip="Commit all bound rows in this box"/>
+                                <ListBox x:Name="LbApplied"
+                                         ItemsSource="{Binding AppliedAutomatically}"
+                                         SelectionChanged="AutoMatchResult_SelectionChanged">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Image Width="22" Height="22" Source="{Binding CurrentIconPreview}" Margin="0,0,4,0" ToolTip="{Binding CurrentIconLabel}"/>
+                                                <TextBlock Text="→" VerticalAlignment="Center" Foreground="#6B5820" Margin="0,0,4,0"/>
+                                                <Image Width="22" Height="22" Source="{Binding AssignedIconPreview}" Margin="0,0,6,0" ToolTip="{Binding AssignedIconName}"/>
+                                                <TextBlock Text="{Binding FolderName}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </DockPanel>
                         </GroupBox>
-                        <Grid Grid.Row="1">
+
+                        <!-- Row 2: Best Guess | No Match | Errors -->
+                        <Grid Grid.Row="2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <GroupBox Header="Best Guess" Margin="0,0,4,0">
-                                <ListBox ItemsSource="{Binding OurBestGuess}" DisplayMemberPath="FolderName"/>
+
+                            <GroupBox Grid.Column="0" Header="Best Guess — review" Margin="0,0,4,0">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Bottom" Content="Arise — Best Guess" Margin="0,4,0,0"
+                                            Style="{StaticResource GoldButton}" Click="AriseBestGuess_Click"/>
+                                    <ListBox x:Name="LbBestGuess"
+                                             ItemsSource="{Binding OurBestGuess}"
+                                             SelectionChanged="AutoMatchResult_SelectionChanged">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Image Width="18" Height="18" Source="{Binding CurrentIconPreview}" Margin="0,0,3,0" ToolTip="{Binding CurrentIconLabel}"/>
+                                                    <TextBlock Text="→" VerticalAlignment="Center" Foreground="#6B5820" Margin="0,0,3,0" FontSize="11"/>
+                                                    <Image Width="18" Height="18" Source="{Binding AssignedIconPreview}" Margin="0,0,5,0" ToolTip="{Binding AssignedIconName}"/>
+                                                    <TextBlock Text="{Binding FolderName}" FontSize="11" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </DockPanel>
                             </GroupBox>
-                            <GroupBox Grid.Column="1" Header="No Match" Margin="4,0,4,0">
-                                <ListBox ItemsSource="{Binding UsedDefaultIcon}" DisplayMemberPath="FolderName"/>
+
+                            <GroupBox Grid.Column="1" Header="No Match — bind manually" Margin="4,0,4,0">
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Bottom" Content="Arise — No Match" Margin="0,4,0,0"
+                                            Style="{StaticResource GoldButton}" Click="AriseNoMatch_Click"
+                                            ToolTip="Only rows you've bound an icon to will arise"/>
+                                    <ListBox x:Name="LbNoMatch"
+                                             ItemsSource="{Binding UsedDefaultIcon}"
+                                             SelectionChanged="AutoMatchResult_SelectionChanged">
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Image Width="18" Height="18" Source="{Binding CurrentIconPreview}" Margin="0,0,3,0" ToolTip="{Binding CurrentIconLabel}"/>
+                                                    <TextBlock Text="→" VerticalAlignment="Center" Foreground="#6B5820" Margin="0,0,3,0" FontSize="11"/>
+                                                    <Image Width="18" Height="18" Source="{Binding AssignedIconPreview}" Margin="0,0,5,0" ToolTip="{Binding AssignedIconName}"/>
+                                                    <TextBlock Text="{Binding FolderName}" FontSize="11" VerticalAlignment="Center"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </DockPanel>
                             </GroupBox>
+
                             <GroupBox Grid.Column="2" Header="Errors" Margin="4,0,0,0">
-                                <ListBox ItemsSource="{Binding Skipped}" DisplayMemberPath="FolderName"/>
+                                <ListBox x:Name="LbErrors"
+                                         ItemsSource="{Binding Skipped}"
+                                         SelectionChanged="AutoMatchResult_SelectionChanged">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding FolderName}" FontSize="11"/>
+                                                <TextBlock Text="{Binding Reason}" FontSize="10" Foreground="#6B5820" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
                             </GroupBox>
                         </Grid>
                     </Grid>
