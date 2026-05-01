@@ -73,6 +73,31 @@ namespace Revenant_Theme_Studio
         private void CancelAutoMatch_Click(object sender, RoutedEventArgs e)
             => ViewModel.CancelAutoMatch();
 
+        private void LaunchMunEditor_Click(object sender, RoutedEventArgs e)
+        {
+            if (!LicenseService.Instance.IsPro)
+            {
+                MessageBox.Show(this,
+                    "The .mun editor is a Pro feature.\nActivate a Pro license to unlock it.",
+                    "Pro feature", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            string munPath = Environment.ExpandEnvironmentVariables(
+                @"%SystemRoot%\SystemResources\imageres.dll.mun");
+
+            if (!System.IO.File.Exists(munPath))
+            {
+                MessageBox.Show(this,
+                    $"imageres.dll.mun was not found at:\n{munPath}",
+                    "File not found", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var win = new Revenant_Theme_Studio.Windows.MunEditorWindow(munPath) { Owner = this };
+            win.ShowDialog();
+        }
+
         private void UnlockPro_Click(object sender, RoutedEventArgs e)
         {
             var win = new LicenseKeyWindow { Owner = this };

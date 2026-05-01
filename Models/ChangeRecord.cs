@@ -6,7 +6,8 @@ namespace Revenant_Theme_Studio.Models
     {
         Folder,
         Drive,
-        Shell
+        Shell,
+        MunFile
     }
 
     public class ChangeRecord

@@ -36,8 +36,17 @@
       Keep this here even when no worktrees are present — agent runs may
       drop new ones in at any time and this makes the project bulletproof.
     -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);.claude\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);.claude\**;RTS.MunWriter\**</DefaultItemExcludes>
   </PropertyGroup>
+
+  <Target Name="BuildAndCopyMunWriter" AfterTargets="Build">
+    <Exec Command="dotnet build &quot;$(MSBuildThisFileDirectory)RTS.MunWriter\RTS.MunWriter.csproj&quot; -c $(Configuration) -r win-x64 --no-self-contained"
+          ContinueOnError="true"/>
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.exe"
+          DestinationFolder="$(OutputPath)"
+          SkipUnchangedFiles="true"
+          ContinueOnError="true"/>
+  </Target>
 
   <ItemGroup>
     <Compile Remove="IconEngine\**\*" />

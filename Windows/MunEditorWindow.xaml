@@ -1,0 +1,183 @@
+<Window x:Class="Revenant_Theme_Studio.Windows.MunEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title=".mun Editor — Revenant Theme Studio"
+        Width="900" Height="660"
+        MinWidth="720" MinHeight="480"
+        Background="#111111"
+        Foreground="#C4962B"
+        FontFamily="Segoe UI"
+        WindowStartupLocation="CenterOwner"
+        Loaded="Window_Loaded">
+
+    <Window.Resources>
+        <Style x:Key="GoldButton" TargetType="Button">
+            <Setter Property="Foreground"   Value="#001a0e"/>
+            <Setter Property="FontWeight"   Value="Bold"/>
+            <Setter Property="BorderBrush"  Value="#C4962B"/>
+            <Setter Property="Padding"      Value="12,5"/>
+            <Setter Property="Cursor"       Value="Hand"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#C4962B" Offset="0"/>
+                        <GradientStop Color="#7a5e30" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="#5a4820"/>
+                    <Setter Property="Background" Value="#2a1a0a"/>
+                    <Setter Property="BorderBrush" Value="#2a1a0a"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="DimButton" TargetType="Button">
+            <Setter Property="Foreground"    Value="#A88E5E"/>
+            <Setter Property="Background"    Value="#1e1e1e"/>
+            <Setter Property="BorderBrush"   Value="#3a3a3a"/>
+            <Setter Property="Padding"       Value="12,5"/>
+            <Setter Property="Cursor"        Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Foreground" Value="#3a3020"/>
+                    <Setter Property="Background" Value="#191919"/>
+                    <Setter Property="BorderBrush" Value="#252525"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#0d0d0d" BorderBrush="#00422a" BorderThickness="0,0,0,1" Padding="16,12">
+            <StackPanel>
+                <TextBlock Text="imageres.dll.mun  EDITOR"
+                           FontFamily="Consolas" FontWeight="Bold"
+                           Foreground="#C4962B" FontSize="15"/>
+                <TextBlock Text="{Binding MunPath}" FontSize="11" Foreground="#5a4820"
+                           Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Loading overlay -->
+        <Border Grid.Row="1" Background="#111111"
+                Visibility="{Binding IsLoading, Converter={StaticResource BoolToVis}}"
+                Panel.ZIndex="10">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="{Binding Status}" Foreground="#C4962B"
+                           FontFamily="Consolas" FontSize="14" HorizontalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Icon list -->
+        <ListView Grid.Row="1" Name="IconListView"
+                  ItemsSource="{Binding Entries}"
+                  SelectedItem="{Binding SelectedEntry}"
+                  Background="#111111"
+                  BorderThickness="0"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling">
+
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Padding"                    Value="0"/>
+                    <Setter Property="Background"                 Value="Transparent"/>
+                    <Setter Property="BorderThickness"            Value="0"/>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="#001f10"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#181008"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
+
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderBrush="#1e1e1e" BorderThickness="0,0,0,1" Padding="12,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="72"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Thumbnail -->
+                            <Border Grid.Column="0" Width="64" Height="64"
+                                    Background="#0a0a0a" BorderBrush="#2a2a2a" BorderThickness="1">
+                                <Image Source="{Binding Thumbnail}" Stretch="Uniform"
+                                       RenderOptions.BitmapScalingMode="HighQuality"/>
+                            </Border>
+
+                            <!-- Name + state -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="12,0">
+                                <TextBlock Text="{Binding DisplayName}"
+                                           FontFamily="Consolas" FontSize="13"
+                                           Foreground="#C4962B" FontWeight="Bold"/>
+                                <TextBlock FontSize="11" Foreground="#5a4820" Margin="0,3,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="original"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasReplacement}" Value="True">
+                                                    <Setter Property="Text" Value="replacement staged"/>
+                                                    <Setter Property="Foreground" Value="#7ab87a"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <!-- Action buttons -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal"
+                                        VerticalAlignment="Center" Margin="0,0,4,0">
+                                <Button Content="EXPORT"
+                                        Style="{StaticResource GoldButton}"
+                                        Margin="0,0,6,0"
+                                        Tag="{Binding}"
+                                        Click="Export_Click"/>
+                                <Button Content="REPLACE"
+                                        Style="{StaticResource DimButton}"
+                                        Tag="{Binding}"
+                                        Click="Replace_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!-- Status bar -->
+        <Border Grid.Row="2" Background="#0d0d0d" BorderBrush="#00422a"
+                BorderThickness="0,1,0,0" Padding="16,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding Status}"
+                           Foreground="#6B5820" FontSize="12" VerticalAlignment="Center"/>
+                <Button Grid.Column="1" Content="APPLY CHANGES"
+                        Style="{StaticResource GoldButton}"
+                        IsEnabled="{Binding HasStagedChanges}"
+                        Click="Apply_Click"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

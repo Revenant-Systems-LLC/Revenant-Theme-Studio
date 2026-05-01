@@ -297,7 +297,7 @@
 
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="Apply" Width="140" Click="ApplyFolderIcon_Click" Style="{StaticResource GoldButton}"/>
-                                <Button Content="Undo / Restore  [Pro]" Width="180" Click="UndoLastChange_Click"/>
+                                <Button Content="Undo / Restore" Width="180" Click="UndoLastChange_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -348,7 +348,7 @@
 
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="Apply" Width="140" Click="ApplyDriveIcon_Click" Style="{StaticResource GoldButton}"/>
-                                <Button Content="Undo / Restore  [Pro]" Width="180" Click="UndoLastChange_Click"/>
+                                <Button Content="Undo / Restore" Width="180" Click="UndoLastChange_Click"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -576,7 +576,8 @@
                                                FontWeight="Bold" Foreground="#C4962B" FontSize="13"/>
                                     <TextBlock Margin="0,6,0,8" TextWrapping="Wrap" Foreground="#6B5820" FontSize="12"
                                                Text="Edit the system .mun resource for icons not addressable via the registry (This PC, Recycle Bin, drive types, dialog icons, etc.). RTS copies your unedited .mun to the managed-storage backup folder before any change. Coming online in this build."/>
-                                    <Button Content="Launch .mun Editor (coming soon)" HorizontalAlignment="Left" IsEnabled="False"/>
+                                    <Button Content="Launch .mun Editor  [Pro]" HorizontalAlignment="Left"
+                                            Click="LaunchMunEditor_Click"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

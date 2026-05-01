@@ -5,6 +5,8 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Revenant-Theme-Studio", "Revenant-Theme-Studio.csproj", "{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RTS.MunWriter", "RTS.MunWriter\RTS.MunWriter.csproj", "{C8D3E4F5-A6B7-4C8D-9E0F-1A2B3C4D5E6F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|x64.Build.0 = Release|Any CPU
 		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|x86.ActiveCfg = Release|Any CPU
 		{2257CDC6-73E7-BC6A-DAA9-39373FA964FC}.Release|x86.Build.0 = Release|Any CPU
+		{C8D3E4F5-A6B7-4C8D-9E0F-1A2B3C4D5E6F}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{C8D3E4F5-A6B7-4C8D-9E0F-1A2B3C4D5E6F}.Debug|Any CPU.Build.0 = Debug|x64
+		{C8D3E4F5-A6B7-4C8D-9E0F-1A2B3C4D5E6F}.Release|Any CPU.ActiveCfg = Release|x64
+		{C8D3E4F5-A6B7-4C8D-9E0F-1A2B3C4D5E6F}.Release|Any CPU.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

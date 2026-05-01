@@ -449,6 +449,8 @@ namespace Revenant_Theme_Studio.ViewModels
                     {
                         var info = new DirectoryInfo(dir);
                         if (info.Attributes.HasFlag(FileAttributes.ReparsePoint)) continue;
+                        // Skip VCS internals and other hidden system dirs to avoid corrupting them.
+                        if (info.Name.StartsWith('.')) continue;
                     }
                     catch { continue; }
 

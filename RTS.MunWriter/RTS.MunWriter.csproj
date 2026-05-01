@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <AssemblyName>RTS.MunWriter</AssemblyName>
+    <Product>Revenant Theme Studio .mun Writer</Product>
+    <Company>Revenant Systems LLC</Company>
+    <Copyright>Copyright © 2026 Revenant Systems LLC</Copyright>
+  </PropertyGroup>
+
+</Project>

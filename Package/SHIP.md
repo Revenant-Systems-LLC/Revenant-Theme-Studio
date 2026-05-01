@@ -60,7 +60,7 @@ signtool sign /fd SHA256 /a /tr http://timestamp.digicert.com /td SHA256 `
 Feel free to use or rewrite:
 
 > **Revenant Theme Studio 1.0**
-> A complete Windows 11 theme manager — custom folder icons, drive icons, shell icons, wallpapers. Every change is consent-gated and fully reversible.
+> A complete Windows 11 theme manager — custom folder icons, drive icons, shell icons. Every change is consent-gated and fully reversible.
 >
 > **Download** — [Revenant-Theme-Studio-1.0.0-win-x64.zip] (113.7 MB)
 > SHA256: `CB11E78B...5403`
