@@ -40,19 +40,22 @@
   </PropertyGroup>
 
   <Target Name="BuildAndCopyMunWriter" AfterTargets="Build">
-    <Exec Command="dotnet build &quot;$(MSBuildThisFileDirectory)RTS.MunWriter\RTS.MunWriter.csproj&quot; -c $(Configuration) -r win-x64 --no-self-contained"
-          ContinueOnError="true"/>
-    <Copy SourceFiles="$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.exe"
-          DestinationFolder="$(OutputPath)"
-          SkipUnchangedFiles="true"
-          ContinueOnError="true"/>
+    <Exec Command="dotnet build &quot;$(MSBuildThisFileDirectory)RTS.MunWriter\RTS.MunWriter.csproj&quot; -c $(Configuration) -r win-x64 --no-self-contained" ContinueOnError="true" />
+    <Copy SourceFiles="$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.exe" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" ContinueOnError="true" />
   </Target>
 
   <ItemGroup>
     <Compile Remove="IconEngine\**\*" />
     <None Remove="Assets\rts_app.ico" />
-    <!-- Branding assets — embedded as WPF pack resources -->
-    <Resource Include="Assets\**\*" />
+    <!-- Branding assets — embedded as WPF pack resources (exclude large model files) -->
+    <Resource Include="Assets\**\*" Exclude="Assets\Models\**" />
+    <!-- ONNX models ship alongside the exe, not embedded -->
+    <Content Include="Assets\Models\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.24.4" />
   </ItemGroup>
 
 </Project>

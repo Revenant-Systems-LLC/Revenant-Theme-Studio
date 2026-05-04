@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
@@ -16,6 +17,38 @@ namespace Revenant_Theme_Studio
         public MainWindow()
         {
             InitializeComponent();
+
+            // Prevent RTS from launching larger than the user's current desktop
+            // working area. This avoids the title bar spawning off-screen after
+            // monitor/resolution/DPI changes.
+            Loaded += (_, _) => ClampWindowToWorkingArea();
+        }
+
+        private void ClampWindowToWorkingArea()
+        {
+            var workArea = SystemParameters.WorkArea;
+            const double margin = 40;
+
+            var maxWidth = Math.Max(640, workArea.Width - margin);
+            var maxHeight = Math.Max(480, workArea.Height - margin);
+
+            // If the user's screen is smaller than our design minimums, lower the
+            // minimums for this session so the window can still fit on screen.
+            if (MinWidth > maxWidth) MinWidth = maxWidth;
+            if (MinHeight > maxHeight) MinHeight = maxHeight;
+
+            if (Width > maxWidth) Width = maxWidth;
+            if (Height > maxHeight) Height = maxHeight;
+
+            Left = workArea.Left + Math.Max(0, (workArea.Width - Width) / 2);
+            Top = workArea.Top + Math.Max(0, (workArea.Height - Height) / 2);
+
+            // Hard clamp in case Windows restores odd saved coordinates later.
+            if (Left < workArea.Left) Left = workArea.Left;
+            if (Top < workArea.Top) Top = workArea.Top;
+
+            if (Left + Width > workArea.Right) Left = Math.Max(workArea.Left, workArea.Right - Width);
+            if (Top + Height > workArea.Bottom) Top = Math.Max(workArea.Top, workArea.Bottom - Height);
         }
 
         // ── Consent gate ─────────────────────────────────────────────────────

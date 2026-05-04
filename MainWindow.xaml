@@ -6,6 +6,8 @@
         xmlns:ctrls="clr-namespace:Revenant_Theme_Studio.Controls"
         Title="Revenant Theme Studio"
         Height="880" Width="1340"
+        MinHeight="620" MinWidth="900"
+        ResizeMode="CanResize"
         Foreground="#C4962B"
         WindowStartupLocation="CenterScreen">
 
@@ -31,6 +33,14 @@
         <SolidColorBrush x:Key="ForestAccent" Color="#00422a"/>
         <SolidColorBrush x:Key="RedAccent"    Color="#8B1A1A"/>
         <SolidColorBrush x:Key="BorderColor"  Color="#00422a"/>
+
+        <LinearGradientBrush x:Key="GoldTextGradient"
+                             StartPoint="0,0"
+                             EndPoint="1,1">
+            <GradientStop Color="#d8b878" Offset="0"/>
+            <GradientStop Color="#997a4c" Offset="0.50"/>
+            <GradientStop Color="#7a5a2f" Offset="1"/>
+        </LinearGradientBrush>
 
         <Style TargetType="Button">
             <Setter Property="Background"      Value="#002414"/>
@@ -208,8 +218,8 @@
         <!-- ── Header ── -->
         <DockPanel Grid.Row="0" Margin="0,0,0,10" LastChildFill="False">
             <Image DockPanel.Dock="Left"
-                   Source="pack://application:,,,/Assets/rts-header-logo-alt.png"
-                   Height="120"
+                   Source="pack://application:,,,/Assets/rsllc-header-logo.png"
+                   Height="108"
                    HorizontalAlignment="Left"
                    RenderOptions.BitmapScalingMode="HighQuality"
                    Stretch="Uniform"
@@ -218,7 +228,7 @@
                 <TextBlock Text="REVENANT THEME STUDIO"
                            FontFamily="pack://application:,,,/Assets/#Street Reich"
                            FontSize="72"
-                           Foreground="#997a4c"/>
+                           Foreground="{StaticResource GoldTextGradient}"/>
                 <TextBlock Text="ICON MANAGEMENT SYSTEM  ·  REVENANT SYSTEMS LLC"
                            FontFamily="Consolas" FontSize="12"
                            Foreground="#4a3a20" Margin="2,4,0,0"/>
@@ -235,10 +245,10 @@
 
         <!-- ── Watermark ── -->
         <Image Grid.Row="1" Grid.RowSpan="2"
-               Source="pack://application:,,,/Assets/revsys-wordmark.png"
+               Source="pack://application:,,,/Assets/revsys-wordmark-alt.png"
                HorizontalAlignment="Right"
                VerticalAlignment="Bottom"
-               Opacity="0.07"
+               Opacity="0.12"
                IsHitTestVisible="False"
                Height="520"
                RenderOptions.BitmapScalingMode="HighQuality"
@@ -263,7 +273,7 @@
                                 </LinearGradientBrush>
                             </Rectangle.Fill>
                             <Rectangle.OpacityMask>
-                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_app_alt.ico" Stretch="Uniform"/>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_vector.ico" Stretch="Uniform"/>
                             </Rectangle.OpacityMask>
                         </Rectangle>
                         <TextBlock Text="Folder Icons" FontFamily="Consolas" FontSize="13"/>
@@ -316,7 +326,7 @@
                                 </LinearGradientBrush>
                             </Rectangle.Fill>
                             <Rectangle.OpacityMask>
-                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_app_alt.ico" Stretch="Uniform"/>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_vector.ico" Stretch="Uniform"/>
                             </Rectangle.OpacityMask>
                         </Rectangle>
                         <TextBlock Text="Drive Icons" FontFamily="Consolas" FontSize="13"/>
@@ -371,7 +381,7 @@
                                 </LinearGradientBrush>
                             </Rectangle.Fill>
                             <Rectangle.OpacityMask>
-                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_app_alt.ico" Stretch="Uniform"/>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_vector.ico" Stretch="Uniform"/>
                             </Rectangle.OpacityMask>
                         </Rectangle>
                         <TextBlock Text="Auto Match  [Pro]" FontFamily="Consolas" FontSize="13"/>
@@ -527,7 +537,7 @@
                                 </LinearGradientBrush>
                             </Rectangle.Fill>
                             <Rectangle.OpacityMask>
-                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_app_alt.ico" Stretch="Uniform"/>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_vector.ico" Stretch="Uniform"/>
                             </Rectangle.OpacityMask>
                         </Rectangle>
                         <TextBlock Text="System Icons  [Pro]" FontFamily="Consolas" FontSize="13"/>
@@ -597,7 +607,7 @@
                                 </LinearGradientBrush>
                             </Rectangle.Fill>
                             <Rectangle.OpacityMask>
-                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_app_alt.ico" Stretch="Uniform"/>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_vector.ico" Stretch="Uniform"/>
                             </Rectangle.OpacityMask>
                         </Rectangle>
                         <TextBlock Text="Help" FontFamily="Consolas" FontSize="13"/>
