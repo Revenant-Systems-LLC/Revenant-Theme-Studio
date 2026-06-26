@@ -1,62 +1,67 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Revenant_Theme_Studio.Services
 {
     /// <summary>
-    /// HMAC-SHA256 local license validation.
-    /// Key format: RTSP-XXXXXXXX-XXXXXXXX-XXXXXXXX (24 hex chars = 12 bytes)
-    ///   Byte[0]      = tier (0x01 = Pro)
-    ///   Bytes[1-5]   = random (5 bytes, ensures uniqueness)
-    ///   Bytes[6-11]  = first 6 bytes of HMAC-SHA256(bytes[0..5], _secret)
-    /// Stored encrypted via AES-CBC with a machine-derived key.
-    /// Swap ValidateAndActivate for a server call later — nothing else changes.
+    /// Server-validated license service. Key authenticity is verified against
+    /// https://license.revenantsystems.net/api/validate — no HMAC secret lives
+    /// in this binary. A successful activation is cached locally (AES-CBC,
+    /// machine-bound) and honoured offline for up to 30 days.
     /// </summary>
     public sealed class LicenseService
     {
-        private static readonly byte[] _secret =
-        {
-            0xA3, 0x7F, 0x2C, 0x91, 0xE8, 0x4B, 0xD6, 0x05,
-            0x3A, 0xC2, 0x78, 0xBF, 0x19, 0x6E, 0xF4, 0x82,
-            0x57, 0x0D, 0xAB, 0x3C, 0x9F, 0xE1, 0x74, 0x28,
-            0x6D, 0xB0, 0x45, 0xF3, 0x1A, 0x8C, 0x62, 0xDE
-        };
+        private const string ValidationEndpoint = "https://license.revenantsystems.net/api/validate";
+        private const int OfflineGraceDays = 30;
 
         private static readonly string _keyFilePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Revenant Theme Studio",
             "license.dat");
 
+        private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(10) };
+
         public static LicenseService Instance { get; } = new LicenseService();
 
         public LicenseTier CurrentTier { get; private set; } = LicenseTier.Free;
         public bool IsPro => CurrentTier == LicenseTier.Pro;
 
-        private LicenseService() => TryLoadSavedKey();
-        public bool ValidateAndActivate(string rawKey)
+        private LicenseService() => TryLoadCachedActivation();
+
+        public async Task<bool> ValidateAndActivateAsync(string rawKey)
         {
             if (string.IsNullOrWhiteSpace(rawKey)) return false;
 
-            var cleaned = rawKey.Replace("-", "").Replace(" ", "").ToUpperInvariant();
-            if (cleaned.StartsWith("RTSP")) cleaned = cleaned[4..];
-            if (cleaned.Length != 24) return false;
+            var cleaned = rawKey.Trim().ToUpperInvariant();
 
             try
             {
-                var bytes = Convert.FromHexString(cleaned);
-                var payload  = bytes[..6];
-                var checksum = bytes[6..];
+                var body = JsonSerializer.Serialize(new { key = cleaned });
+                using var content = new StringContent(body, Encoding.UTF8, "application/json");
+                using var response = await _http.PostAsync(ValidationEndpoint, content);
 
-                using var hmac = new HMACSHA256(_secret);
-                var computed = hmac.ComputeHash(payload);
-                if (!computed.Take(6).SequenceEqual(checksum)) return false;
-                if (bytes[0] != 0x01) return false; // 0x01 = Pro tier
+                if (!response.IsSuccessStatusCode) return false;
+
+                var json = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (!root.TryGetProperty("valid", out var validProp) || !validProp.GetBoolean())
+                    return false;
+
+                var tier = root.TryGetProperty("tier", out var tierProp)
+                    ? tierProp.GetString() : "pro";
+
+                if (tier != "pro") return false;
 
                 CurrentTier = LicenseTier.Pro;
-                SaveKey(rawKey);
+                SaveActivation(cleaned);
                 return true;
             }
             catch { return false; }
@@ -68,21 +73,7 @@ namespace Revenant_Theme_Studio.Services
             try { if (File.Exists(_keyFilePath)) File.Delete(_keyFilePath); } catch { }
         }
 
-        /// <summary>
-        /// Dev tool — generate a valid Pro key. Call from a scratch console or unit test.
-        /// Remove or guard before public release if desired.
-        /// </summary>
-        public static string GenerateProKey()
-        {
-            var random = new byte[5];
-            RandomNumberGenerator.Fill(random);
-            var payload = new byte[] { 0x01 }.Concat(random).ToArray();
-            using var hmac = new HMACSHA256(_secret);
-            var sig = hmac.ComputeHash(payload).Take(6).ToArray();
-            var hex = Convert.ToHexString(payload.Concat(sig).ToArray());
-            return $"RTSP-{hex[..8]}-{hex[8..16]}-{hex[16..24]}";
-        }
-        private void TryLoadSavedKey()
+        private void TryLoadCachedActivation()
         {
             try
             {
@@ -92,21 +83,39 @@ namespace Revenant_Theme_Studio.Services
                 var payload = stored[16..];
                 using var aes = Aes.Create();
                 aes.Key = GetMachineKey();
-                var decrypted = aes.DecryptCbc(payload, iv);
-                ValidateAndActivate(Encoding.UTF8.GetString(decrypted));
+                var json = Encoding.UTF8.GetString(aes.DecryptCbc(payload, iv));
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("activatedUtc", out var dateProp))
+                {
+                    var activatedUtc = DateTimeOffset.Parse(dateProp.GetString()!);
+                    if (DateTimeOffset.UtcNow - activatedUtc > TimeSpan.FromDays(OfflineGraceDays))
+                        return;
+                }
+
+                if (root.TryGetProperty("tier", out var tierProp) && tierProp.GetString() == "pro")
+                    CurrentTier = LicenseTier.Pro;
             }
             catch { /* corrupted / different machine — stay Free */ }
         }
 
-        private static void SaveKey(string rawKey)
+        private static void SaveActivation(string rawKey)
         {
             try
             {
+                var record = JsonSerializer.Serialize(new
+                {
+                    key          = rawKey,
+                    tier         = "pro",
+                    activatedUtc = DateTimeOffset.UtcNow.ToString("O")
+                });
+
                 Directory.CreateDirectory(Path.GetDirectoryName(_keyFilePath)!);
                 using var aes = Aes.Create();
                 aes.Key = GetMachineKey();
                 aes.GenerateIV();
-                var encrypted = aes.EncryptCbc(Encoding.UTF8.GetBytes(rawKey), aes.IV);
+                var encrypted = aes.EncryptCbc(Encoding.UTF8.GetBytes(record), aes.IV);
                 File.WriteAllBytes(_keyFilePath, aes.IV.Concat(encrypted).ToArray());
             }
             catch { /* non-fatal — user re-enters key next launch */ }

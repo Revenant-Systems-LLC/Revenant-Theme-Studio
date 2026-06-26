@@ -1,0 +1,14 @@
+name            = "rts-license-validate"
+main            = "index.js"
+compatibility_date = "2024-01-01"
+
+# Route: handle requests at license.revenantsystems.net/api/*
+# Requires the domain to be on Cloudflare (orange-cloud / proxied).
+[[routes]]
+pattern   = "license.revenantsystems.net/api/*"
+zone_name = "revenantsystems.net"
+
+# Secrets — set via CLI, never commit values:
+#   wrangler secret put RTS_LICENSE_SECRET
+# The worker reads env.RTS_LICENSE_SECRET at runtime.
+# Value: 64-char hex string of the 32-byte HMAC-SHA256 key.
