@@ -36,9 +36,12 @@ namespace Revenant_Theme_Studio
             DataContext = this;
         }
 
-        private void Activate_Click(object sender, RoutedEventArgs e)
+        private async void Activate_Click(object sender, RoutedEventArgs e)
         {
-            if (LicenseService.Instance.ValidateAndActivate(KeyInput))
+            StatusMessage = "Validating…";
+            StatusColor = Brushes.Gray;
+
+            if (await LicenseService.Instance.ValidateAndActivateAsync(KeyInput))
             {
                 StatusMessage = "Activated! RTS Pro is now unlocked.";
                 StatusColor = Brushes.LimeGreen;
@@ -46,7 +49,7 @@ namespace Revenant_Theme_Studio
             }
             else
             {
-                StatusMessage = "Invalid key. Check for typos and try again.";
+                StatusMessage = "Invalid key or no internet connection. Check for typos and try again.";
                 StatusColor = Brushes.OrangeRed;
             }
         }
