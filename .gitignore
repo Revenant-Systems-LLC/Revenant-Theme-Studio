@@ -34,3 +34,8 @@ dist/
 *.msix
 *.msixbundle
 *.appxupload
+AGENTS.md
+
+# Release archives and Krita autosave files — never commit
+*.zip
+*.kra

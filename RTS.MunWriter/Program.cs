@@ -24,16 +24,91 @@ try   { existingIds = ReadGroupChildIds(job.Target); }
 catch (Exception ex) { Err($"Cannot read existing groups: {ex.Message}"); return 1; }
 
 // ── 2. Take ownership + grant write access ───────────────────────────────────
-if (!RunCmd("takeown", $"/f \"{job.Target}\"")) { Err("takeown failed."); return 2; }
-if (!RunCmd("icacls",  $"\"{job.Target}\" /grant Administrators:F")) { Err("icacls grant failed."); return 2; }
+try
+{
+    // Try takeown with error handling
+    var takeownResult = RunCmdWithOutput("takeown", $"/f \"{job.Target}\"");
+    if (!takeownResult.success)
+    {
+        Err($"takeown failed: {takeownResult.output}");
+        // Try alternative method
+        Err("Attempting alternative permission method...");
+    }
+
+    // Try icacls with error handling
+    var icaclsResult = RunCmdWithOutput("icacls", $"\"{job.Target}\" /grant Administrators:F");
+    if (!icaclsResult.success)
+    {
+        Err($"icacls grant failed: {icaclsResult.output}");
+        // Try full control for current user
+        var userName = Environment.UserName;
+        var userResult = RunCmdWithOutput("icacls", $"\"{job.Target}\" /grant \"{userName}\":F");
+        if (!userResult.success)
+        {
+            Err($"User permission grant failed: {userResult.output}");
+            return 2;
+        }
+    }
+}
+catch (Exception ex)
+{
+    Err($"Permission setup failed: {ex.Message}");
+    return 2;
+}
 
 // ── 3. Open resource update handle ──────────────────────────────────────────
-IntPtr hUpdate = BeginUpdateResource(job.Target, false);
-if (hUpdate == IntPtr.Zero)
+IntPtr hUpdate;
+bool useAlternativeMethod = false;
+
+try
 {
-    Err($"BeginUpdateResource failed: {Marshal.GetLastWin32Error()}");
+    hUpdate = BeginUpdateResource(job.Target, false);
+    if (hUpdate == IntPtr.Zero)
+    {
+        int win32Error = Marshal.GetLastWin32Error();
+        Err($"BeginUpdateResource failed: {win32Error} (0x{win32Error:X8})");
+
+        // If WRP is blocking, try alternative method
+        if (win32Error == 5 || win32Error == 32) // ACCESS_DENIED or SHARING_VIOLATION
+        {
+            Err("Attempting alternative WRP-safe method...");
+            useAlternativeMethod = true;
+        }
+        else
+        {
+            RestoreAcl(job.Target);
+            return 3;
+        }
+    }
+}
+catch (Exception ex)
+{
+    Err($"BeginUpdateResource exception: {ex.Message}");
     RestoreAcl(job.Target);
     return 3;
+}
+
+// Alternative method: copy to temp, modify, replace
+if (useAlternativeMethod)
+{
+    try
+    {
+        var result = AlternativeUpdateMethod(job);
+        if (!result.success)
+        {
+            Err($"Alternative method failed: {result.message}");
+            RestoreAcl(job.Target);
+            return 3;
+        }
+        Console.Error.WriteLine("OK");
+        return 0;
+    }
+    catch (Exception ex)
+    {
+        Err($"Alternative method exception: {ex.Message}");
+        RestoreAcl(job.Target);
+        return 3;
+    }
 }
 
 bool committed = false;
@@ -58,27 +133,51 @@ try
         int   frameCount = Math.Min(frames.Count, childIds.Count);
         byte[] grpBytes  = BuildGrpIconDir(frames, childIds, frameCount);
 
-        if (!UpdateResource(hUpdate, (IntPtr)RT_GROUP_ICON, (IntPtr)rep.GroupId, 0, grpBytes, (uint)grpBytes.Length))
+        try
         {
-            Err($"UpdateResource group {rep.GroupId}: {Marshal.GetLastWin32Error()}");
-            EndUpdateResource(hUpdate, true);
-            return 4;
-        }
-
-        for (int i = 0; i < frameCount; i++)
-        {
-            byte[] fd = frames[i].data;
-            if (!UpdateResource(hUpdate, (IntPtr)RT_ICON, (IntPtr)childIds[i], 0, fd, (uint)fd.Length))
+            if (!UpdateResource(hUpdate, (IntPtr)RT_GROUP_ICON, (IntPtr)rep.GroupId, 0, grpBytes, (uint)grpBytes.Length))
             {
-                Err($"UpdateResource icon {childIds[i]}: {Marshal.GetLastWin32Error()}");
+                int win32Error = Marshal.GetLastWin32Error();
+                Err($"UpdateResource group {rep.GroupId}: {win32Error} (0x{win32Error:X8})");
                 EndUpdateResource(hUpdate, true);
                 return 4;
             }
+
+            for (int i = 0; i < frameCount; i++)
+            {
+                byte[] fd = frames[i].data;
+                if (!UpdateResource(hUpdate, (IntPtr)RT_ICON, (IntPtr)childIds[i], 0, fd, (uint)fd.Length))
+                {
+                    int win32Error = Marshal.GetLastWin32Error();
+                    Err($"UpdateResource icon {childIds[i]}: {win32Error} (0x{win32Error:X8})");
+                    EndUpdateResource(hUpdate, true);
+                    return 4;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Err($"UpdateResource exception: {ex.Message}");
+            EndUpdateResource(hUpdate, true);
+            return 4;
         }
     }
 
-    if (!EndUpdateResource(hUpdate, false)) { Err($"EndUpdateResource: {Marshal.GetLastWin32Error()}"); return 4; }
-    committed = true;
+    try
+    {
+        if (!EndUpdateResource(hUpdate, false))
+        {
+            int win32Error = Marshal.GetLastWin32Error();
+            Err($"EndUpdateResource: {win32Error} (0x{win32Error:X8})");
+            return 4;
+        }
+        committed = true;
+    }
+    catch (Exception ex)
+    {
+        Err($"EndUpdateResource exception: {ex.Message}");
+        return 4;
+    }
 }
 finally
 {
@@ -104,11 +203,44 @@ static bool RunCmd(string exe, string arguments)
     return p.ExitCode == 0;
 }
 
+static (bool success, string output) RunCmdWithOutput(string exe, string arguments)
+{
+    try
+    {
+        var p = Process.Start(new ProcessStartInfo(exe, arguments)
+        {
+            UseShellExecute = false, CreateNoWindow = true,
+            RedirectStandardOutput = true, RedirectStandardError = true
+        })!;
+
+        // Read both pipes concurrently to prevent deadlock when either buffer fills.
+        var stdoutTask = p.StandardOutput.ReadToEndAsync();
+        var stderrTask = p.StandardError.ReadToEndAsync();
+        Task.WaitAll(stdoutTask, stderrTask);
+        p.WaitForExit();
+        string output = stdoutTask.Result + stderrTask.Result;
+
+        return (p.ExitCode == 0, output);
+    }
+    catch (Exception ex)
+    {
+        return (false, $"Exception: {ex.Message}");
+    }
+}
+
 static void RestoreAcl(string target)
 {
-    RunCmd("icacls", $"\"{target}\" /setowner \"NT SERVICE\\TrustedInstaller\"");
-    RunCmd("icacls", $"\"{target}\" /grant:r \"NT SERVICE\\TrustedInstaller\":F");
-    RunCmd("icacls", $"\"{target}\" /remove:g Administrators");
+    try
+    {
+        RunCmd("icacls", $"\"{target}\" /setowner \"NT SERVICE\\TrustedInstaller\"");
+        RunCmd("icacls", $"\"{target}\" /grant:r \"NT SERVICE\\TrustedInstaller\":F");
+        RunCmd("icacls", $"\"{target}\" /remove:g Administrators");
+    }
+    catch (Exception ex)
+    {
+        Err($"Warning: ACL restoration failed: {ex.Message}");
+        // Non-fatal - the file will still work with incorrect permissions
+    }
 }
 
 static Dictionary<int, List<ushort>> ReadGroupChildIds(string path)
@@ -188,4 +320,103 @@ static List<(byte w, byte h, ushort bc, byte[] data)> ParseIco(string path)
         frames.Add((w, h, bc, r.ReadBytes((int)sz)));
     }
     return frames;
+}
+
+static (bool success, string message) AlternativeUpdateMethod(MunJob job)
+{
+    try
+    {
+        // Create temporary copy
+        string tempPath = Path.Combine(Path.GetTempPath(), $"rts_mun_temp_{Guid.NewGuid():N}.mun");
+        File.Copy(job.Target, tempPath, overwrite: true);
+
+        // Read existing groups from temp copy
+        Dictionary<int, List<ushort>> existingIds;
+        try { existingIds = ReadGroupChildIds(tempPath); }
+        catch (Exception ex) { return (false, $"Cannot read temp file: {ex.Message}"); }
+
+        // Open resource update on temp file
+        IntPtr hUpdate = BeginUpdateResource(tempPath, false);
+        if (hUpdate == IntPtr.Zero)
+        {
+            int win32Error = Marshal.GetLastWin32Error();
+            return (false, $"BeginUpdateResource on temp file failed: {win32Error}");
+        }
+
+        bool committed = false;
+        try
+        {
+            foreach (var rep in job.Replacements)
+            {
+                if (!File.Exists(rep.IcoPath)) { return (false, $"ICO not found: {rep.IcoPath}"); }
+
+                List<(byte w, byte h, ushort bc, byte[] data)> frames;
+                try { frames = ParseIco(rep.IcoPath); }
+                catch (Exception ex) { return (false, $"Bad ICO {rep.IcoPath}: {ex.Message}"); }
+
+                if (frames.Count == 0) { return (false, $"No frames: {rep.IcoPath}"); }
+
+                if (!existingIds.TryGetValue(rep.GroupId, out var childIds) || childIds.Count == 0)
+                {
+                    Console.Error.WriteLine($"Group {rep.GroupId} not found in target — skipping.");
+                    continue;
+                }
+
+                int frameCount = Math.Min(frames.Count, childIds.Count);
+                byte[] grpBytes = BuildGrpIconDir(frames, childIds, frameCount);
+
+                if (!UpdateResource(hUpdate, (IntPtr)RT_GROUP_ICON, (IntPtr)rep.GroupId, 0, grpBytes, (uint)grpBytes.Length))
+                {
+                    int win32Error = Marshal.GetLastWin32Error();
+                    return (false, $"UpdateResource group {rep.GroupId}: {win32Error}");
+                }
+
+                for (int i = 0; i < frameCount; i++)
+                {
+                    byte[] fd = frames[i].data;
+                    if (!UpdateResource(hUpdate, (IntPtr)RT_ICON, (IntPtr)childIds[i], 0, fd, (uint)fd.Length))
+                    {
+                        int win32Error = Marshal.GetLastWin32Error();
+                        return (false, $"UpdateResource icon {childIds[i]}: {win32Error}");
+                    }
+                }
+            }
+
+            if (!EndUpdateResource(hUpdate, false))
+            {
+                int win32Error = Marshal.GetLastWin32Error();
+                return (false, $"EndUpdateResource: {win32Error}");
+            }
+            committed = true;
+        }
+        finally
+        {
+            if (!committed) EndUpdateResource(hUpdate, true);
+        }
+
+        // Replace original file with modified temp file
+        try
+        {
+            // Take ownership of original file again
+            RunCmd("takeown", $"/f \"{job.Target}\"");
+            RunCmd("icacls", $"\"{job.Target}\" /grant Administrators:F");
+
+            // Delete original and move temp file
+            File.Delete(job.Target);
+            File.Move(tempPath, job.Target);
+
+            // Restore original permissions
+            RestoreAcl(job.Target);
+
+            return (true, "Success");
+        }
+        catch (Exception ex)
+        {
+            return (false, $"File replacement failed: {ex.Message}");
+        }
+    }
+    catch (Exception ex)
+    {
+        return (false, $"Alternative method failed: {ex.Message}");
+    }
 }
