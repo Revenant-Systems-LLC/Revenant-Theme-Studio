@@ -72,7 +72,7 @@ namespace Revenant_Theme_Studio.Services
         /// Dev tool — generate a valid Pro key. Call from a scratch console or unit test.
         /// Remove or guard before public release if desired.
         /// </summary>
-        public static string GenerateProKey()
+        internal static string GenerateProKey()
         {
             var random = new byte[5];
             RandomNumberGenerator.Fill(random);
