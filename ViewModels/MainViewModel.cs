@@ -87,6 +87,17 @@ namespace Revenant_Theme_Studio.ViewModels
             };
 
             SystemTargets = new ObservableCollection<string>(_shellIconService.Targets.Keys.OrderBy(x => x));
+
+            // Auto-load the bundled icon library when it ships alongside the EXE.
+            string bundledEngine = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "IconEngine");
+            if (Directory.Exists(bundledEngine))
+            {
+                FolderIconPicker.IconFolder    = bundledEngine;
+                DriveIconPicker.IconFolder     = bundledEngine;
+                SystemIconPicker.IconFolder    = bundledEngine;
+                AutoMatchIconPicker.IconFolder = bundledEngine;
+                _matchingService.SetIconFolders(bundledEngine);
+            }
         }
 
         // ── Properties ───────────────────────────────────────────────────────

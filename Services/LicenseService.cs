@@ -68,9 +68,11 @@ namespace Revenant_Theme_Studio.Services
             try { if (File.Exists(_keyFilePath)) File.Delete(_keyFilePath); } catch { }
         }
 
+#if DEBUG
         /// <summary>
-        /// Dev tool — generate a valid Pro key. Call from a scratch console or unit test.
-        /// Remove or guard before public release if desired.
+        /// Dev-only key generator — excluded from release builds.
+        /// In production, generate keys via a private CLI tool that holds the secret
+        /// outside of the shipping binary.
         /// </summary>
         public static string GenerateProKey()
         {
@@ -82,6 +84,7 @@ namespace Revenant_Theme_Studio.Services
             var hex = Convert.ToHexString(payload.Concat(sig).ToArray());
             return $"RTSP-{hex[..8]}-{hex[8..16]}-{hex[16..24]}";
         }
+#endif
         private void TryLoadSavedKey()
         {
             try

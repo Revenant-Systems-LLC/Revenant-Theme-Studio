@@ -50,7 +50,10 @@ namespace Revenant_Theme_Studio
 
         // ── Action handlers ──────────────────────────────────────────────────
         private void ApplyFolderIcon_Click(object sender, RoutedEventArgs e)
-            => ViewModel.ApplyFolderIcon();
+        {
+            if (!EnsureConsent()) return;
+            ViewModel.ApplyFolderIcon();
+        }
 
         private void ApplyDriveIcon_Click(object sender, RoutedEventArgs e)
         {
