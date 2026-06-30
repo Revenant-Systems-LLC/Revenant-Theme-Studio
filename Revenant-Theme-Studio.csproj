@@ -53,6 +53,8 @@
     <None Remove="Assets\rts_app.ico" />
     <!-- Branding assets — embedded as WPF pack resources -->
     <Resource Include="Assets\**\*" />
+    <!-- Bundled icon library — copied to output directory so the app ships with icons -->
+    <None Include="IconEngine\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
