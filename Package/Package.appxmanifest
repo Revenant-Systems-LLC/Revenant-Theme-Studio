@@ -58,7 +58,7 @@
 
   <Capabilities>
     <!-- Required for desktop.ini writes, HKCU registry access, and user-profile file ops. -->
-    <!-- rsh-suppress: RSH-MSIX-002 runFullTrust required — app patches imageres.dll.mun via elevated helper -->
+    <!-- RWS-suppress: RWS-MSIX-002 runFullTrust required — app patches imageres.dll.mun via elevated helper -->
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>
 

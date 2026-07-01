@@ -49,14 +49,14 @@ namespace Revenant_Theme_Studio.Services
                 var psi = new ProcessStartInfo(HelperPath, $"\"{jobPath}\"")
                 {
                     Verb                   = "runas",
-                    // rsh-suppress: RSH-EXEC-002 UseShellExecute=true required for Verb="runas" UAC elevation
+                    // RWS-suppress: RWS-EXEC-002 UseShellExecute=true required for Verb="runas" UAC elevation
                     UseShellExecute        = true,
                     CreateNoWindow         = false,
                     WindowStyle            = ProcessWindowStyle.Hidden
                 };
 
                 Process proc;
-                // rsh-suppress: RSH-EXEC-001 psi uses a fixed AppContext-relative helper + GUID temp job file, no user-controlled path
+                // RWS-suppress: RWS-EXEC-001 psi uses a fixed AppContext-relative helper + GUID temp job file, no user-controlled path
                 try   { proc = Process.Start(psi)!; }
                 catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223)
                     { return (false, "UAC prompt was cancelled."); }
