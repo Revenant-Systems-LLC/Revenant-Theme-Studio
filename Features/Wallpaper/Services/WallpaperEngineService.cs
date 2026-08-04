@@ -92,9 +92,24 @@ namespace Revenant_Theme_Studio.Features.Wallpaper.Services
             return source.GetAvailableImages().GetAwaiter().GetResult();
         }
 
+        /// <summary>Path of the wallpaper currently on the first monitor, for previews.</summary>
+        public string? GetCurrentWallpaperPath()
+        {
+            try
+            {
+                var desktop = (IDesktopWallpaper)new DesktopWallpaperClass();
+                if (desktop.GetMonitorDevicePathCount() == 0) return null;
+                var path = desktop.GetWallpaper(desktop.GetMonitorDevicePathAt(0));
+                return string.IsNullOrWhiteSpace(path) || !File.Exists(path) ? null : path;
+            }
+            catch { return null; }
+        }
+
         private static string? GetMonitorDevicePath(IDesktopWallpaper desktop, MonitorProfile target)
         {
             var count = desktop.GetMonitorDevicePathCount();
+            if (count == 0) return null;
+
             for (uint i = 0; i < count; i++)
             {
                 var path = desktop.GetMonitorDevicePathAt(i);
@@ -103,7 +118,12 @@ namespace Revenant_Theme_Studio.Features.Wallpaper.Services
                 if (rect.Left == target.PositionX && rect.Top == target.PositionY)
                     return path;
             }
-            return count > 0 ? desktop.GetMonitorDevicePathAt(0) : null;
+
+            // No positional match (DPI or virtual-origin mismatch between EnumDisplayMonitors
+            // and the COM device paths). Fall back to this monitor's OWN index — falling back
+            // to index 0 would silently land every per-monitor assignment on the primary.
+            var index = (uint)Math.Clamp(target.MonitorId, 0, (int)count - 1);
+            return desktop.GetMonitorDevicePathAt(index);
         }
     }
 }

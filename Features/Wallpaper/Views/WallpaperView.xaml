@@ -1,0 +1,313 @@
+<UserControl x:Class="Revenant_Theme_Studio.Features.Wallpaper.Views.WallpaperView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="380"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══════════ Left rail: sources + results ═══════════ -->
+        <Border Grid.Column="0" Background="#55000a05"
+                BorderBrush="#00422a" BorderThickness="1" Padding="10" Margin="0,0,6,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Text="SOURCES" FontFamily="Consolas" FontWeight="Bold"
+                           Foreground="#6B5820" FontSize="12"/>
+
+                <StackPanel Grid.Row="1" Margin="0,4,0,8">
+                    <TextBox Text="{Binding NewSourceName, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Optional name for this source" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding NewSourceUrl, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Pinterest board, image board search, or any gallery URL"
+                             KeyDown="NewSourceUrl_KeyDown"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <Button Content="Add URL" Width="110" Click="AddUrlSource_Click"/>
+                        <Button Content="Add Folder" Width="110" Click="AddFolderSource_Click" Margin="6,0,0,0"/>
+                    </StackPanel>
+                    <TextBlock Text="pinterest.com/user/board · wallhaven.cc · danbooru · any gallery page"
+                               FontFamily="Consolas" FontSize="10" Foreground="#446B5820"
+                               TextWrapping="Wrap" Margin="0,3,0,0"/>
+                </StackPanel>
+
+                <ListBox Grid.Row="2" ItemsSource="{Binding Sources}"
+                         SelectedItem="{Binding SelectedSource}"
+                         MaxHeight="150" Background="Transparent" BorderThickness="0"
+                         HorizontalContentAlignment="Stretch"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="{Binding Name}" FontFamily="Consolas" FontSize="12"/>
+                                    <TextBlock Text="{Binding Url}" FontFamily="Consolas" FontSize="10"
+                                               Foreground="#66888888" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="✕" Width="24" Height="22"
+                                        Click="RemoveSource_Click" ToolTip="Remove source"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Button Grid.Row="3" Content="Fetch Images" Margin="0,8,0,8" Height="30"
+                        Style="{DynamicResource GoldButton}" Click="Fetch_Click"
+                        IsEnabled="{Binding IsIdle}"/>
+
+                <TextBlock Grid.Row="4" Text="RESULTS — click to load onto canvas"
+                           FontFamily="Consolas" FontWeight="Bold" Foreground="#6B5820" FontSize="12"/>
+
+                <ScrollViewer Grid.Row="5" VerticalScrollBarVisibility="Auto" Margin="0,4,0,0">
+                    <ItemsControl ItemsSource="{Binding Results}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="108" Height="76" Margin="3" Cursor="Hand"
+                                        BorderBrush="#00422a" BorderThickness="1"
+                                        Background="#22000000" ToolTip="{Binding Name}"
+                                        MouseLeftButtonUp="Thumb_Click">
+                                    <Image Source="{Binding ThumbUrl}" Stretch="UniformToFill"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- ═══════════ Right: layout canvas + controls ═══════════ -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" Text="{Binding MonitorSummary}" FontFamily="Consolas"
+                       FontSize="12" Foreground="#6B5820" Margin="4,0,0,6"/>
+
+            <!-- The canvas: image + monitor rects live in image-pixel space; the
+                 Viewbox scales the whole coordinate system, so mouse positions read
+                 against PixelGrid come back in image pixels for free. -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="#22000000"
+                    BorderBrush="#00422a" BorderThickness="1">
+                <Grid>
+                    <TextBlock Text="Fetch a source and click an image to begin"
+                               FontFamily="Consolas" FontSize="14" Foreground="#44888888"
+                               HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasPreview}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <Viewbox Stretch="Uniform" Margin="8"
+                             Visibility="{Binding HasPreview, Converter={StaticResource BoolToVis}}">
+                        <Grid x:Name="PixelGrid"
+                              Width="{Binding ImagePixelWidth}"
+                              Height="{Binding ImagePixelHeight}">
+                            <Image Source="{Binding PreviewBitmap}" Stretch="Fill"/>
+
+                            <ItemsControl ItemsSource="{Binding Regions}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Canvas/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                        <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="{Binding Width}" Height="{Binding Height}"
+                                                BorderBrush="#DDC4962B" Background="#28C4962B"
+                                                Cursor="SizeAll" ToolTip="{Binding Tooltip}"
+                                                BorderThickness="{Binding DataContext.OverlayStrokeThickness,
+                                                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                MouseLeftButtonDown="Region_MouseDown"
+                                                MouseMove="Region_MouseMove"
+                                                MouseLeftButtonUp="Region_MouseUp">
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Label}" FontFamily="Consolas"
+                                                           FontWeight="Bold" Foreground="#EEC4962B"
+                                                           HorizontalAlignment="Center"
+                                                           FontSize="{Binding DataContext.OverlayFontSize,
+                                                                      RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                                <TextBlock Text="{Binding Tooltip}" FontFamily="Consolas"
+                                                           Foreground="#AAC4962B" HorizontalAlignment="Center"
+                                                           FontSize="{Binding DataContext.OverlaySubFontSize,
+                                                                      RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Viewbox>
+                </Grid>
+            </Border>
+
+            <!-- ═══ Independent mode: each monitor holds its OWN image ═══
+                 Sits BESIDE the canvas, not under it. Stacking it under the "*" row
+                 stole the canvas's height and squashed the preview to a sliver. -->
+            <Border Grid.Column="1" Width="178" Margin="6,0,0,0"
+                    Background="#33000a05" BorderBrush="#00422a"
+                    BorderThickness="1" Padding="8,6">
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="PER-MONITOR" FontFamily="Consolas"
+                               FontWeight="Bold" Foreground="#6B5820" FontSize="11"/>
+                    <TextBlock DockPanel.Dock="Top" Text="load an image, then click a monitor"
+                               FontFamily="Consolas" FontSize="10" Foreground="#66888888"
+                               TextWrapping="Wrap" Margin="0,2,0,6"/>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding MonitorSlots}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,6" Padding="5" Cursor="Hand"
+                                            BorderBrush="#00422a" BorderThickness="1" Background="#22000000"
+                                            MouseLeftButtonUp="MonitorSlot_Click"
+                                            ToolTip="Click to assign the loaded image to this monitor">
+                                        <StackPanel>
+                                            <Grid>
+                                                <TextBlock Text="{Binding Label}" FontFamily="Consolas"
+                                                           FontWeight="Bold" FontSize="11" Foreground="#C4962B"
+                                                           VerticalAlignment="Center"/>
+                                                <Button Content="✕" Width="18" Height="16" Padding="0"
+                                                        HorizontalAlignment="Right" Click="ClearSlot_Click"
+                                                        ToolTip="Clear this monitor"
+                                                        Visibility="{Binding HasImage, Converter={StaticResource BoolToVis}}"/>
+                                            </Grid>
+
+                                            <Border Height="66" Margin="0,4,0,4" Background="#22000000"
+                                                    BorderBrush="#33C4962B" BorderThickness="1">
+                                                <Image Source="{Binding Thumbnail}" Stretch="UniformToFill"/>
+                                            </Border>
+
+                                            <TextBlock Text="{Binding Header}" FontFamily="Consolas" FontSize="10"
+                                                       Foreground="#88888888"/>
+                                            <TextBlock Text="{Binding SlotStatus}" FontFamily="Consolas" FontSize="10"
+                                                       Foreground="#66888888" TextTrimming="CharacterEllipsis"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+            </Grid>
+
+            <!-- Controls — wraps to a second line instead of clipping on narrow windows -->
+            <WrapPanel Grid.Row="2" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,2,14,2">
+                    <TextBlock Text="COVERAGE" FontFamily="Consolas" FontWeight="Bold"
+                               Foreground="#6B5820" FontSize="11" VerticalAlignment="Center"/>
+                    <Slider Width="140" Minimum="0.15" Maximum="1.0" Margin="8,0"
+                            Value="{Binding CoverageScale}" VerticalAlignment="Center"
+                            ToolTip="How much of the image your monitors cover"/>
+                    <CheckBox Content="AI Upscale" IsChecked="{Binding UpscaleEnabled}"
+                              FontFamily="Consolas" FontSize="12" Foreground="#C4962B"
+                              VerticalAlignment="Center" Margin="6,0"/>
+                    <Button Content="Reset Layout" Width="110" Click="ResetLayout_Click" Margin="6,0,0,0"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,2,14,2">
+                    <TextBlock Text="every" FontFamily="Consolas" FontSize="12"
+                               Foreground="#888" VerticalAlignment="Center"/>
+                    <TextBox Width="40" Text="{Binding RotationMinutes}" Margin="4,0"
+                             VerticalAlignment="Center" HorizontalContentAlignment="Center"/>
+                    <TextBlock Text="min" FontFamily="Consolas" FontSize="12"
+                               Foreground="#888" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <Button Width="130" Click="Rotation_Click">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                                <Setter Property="Content" Value="Start Rotation"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding RotationRunning}" Value="True">
+                                        <Setter Property="Content" Value="Stop Rotation"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,2,0,2">
+                    <Button Content="Apply Same on All" Width="150" Click="ApplySame_Click"
+                            IsEnabled="{Binding IsIdle}"
+                            ToolTip="One image, Fill, on every monitor"/>
+                    <Button Content="Apply Layout" Width="140" Margin="6,0,0,0"
+                            Style="{DynamicResource GoldButton}" Click="ApplyLayout_Click"
+                            IsEnabled="{Binding IsIdle}"
+                            ToolTip="One image carved across all monitors (One Surface)"/>
+                    <Button Content="Apply Per-Monitor" MinWidth="190" Padding="10,0" Margin="6,0,0,0"
+                            Style="{DynamicResource GoldButton}" Click="ApplyPerMonitor_Click"
+                            IsEnabled="{Binding IsIdle}"
+                            ToolTip="Each monitor gets its own assigned image (Independent)"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding QualityHint}" FontFamily="Consolas"
+                           FontSize="11" Foreground="#66888888" VerticalAlignment="Center"
+                           Margin="4,2,0,2"/>
+            </WrapPanel>
+
+            <!-- Status + progress -->
+            <Grid Grid.Row="3" Margin="0,6,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" FontFamily="Consolas"
+                           FontSize="12" Foreground="#C4962B" TextTrimming="CharacterEllipsis"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <ProgressBar Width="160" Height="12" Value="{Binding ProgressPercent}"
+                                 Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"/>
+                    <Button Content="Cancel" Width="70" Margin="6,0,0,0" Click="Cancel_Click"
+                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

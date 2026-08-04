@@ -1,0 +1,147 @@
+<UserControl x:Class="Revenant_Theme_Studio.Features.Personalization.Views.ColorsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:Revenant_Theme_Studio.Features.Personalization.Views"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="640">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="4,0,12,20" MaxWidth="980" HorizontalAlignment="Left">
+
+            <!-- Mode -->
+            <Border Background="#55000a05" BorderBrush="#00422a" BorderThickness="1"
+                    Padding="14,10" Margin="0,0,0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Choose your mode" FontFamily="Consolas" FontSize="13" Foreground="#C4962B"/>
+                        <TextBlock Text="Change the colors that appear in Windows and your apps"
+                                   FontFamily="Consolas" FontSize="11" Foreground="#66888888"/>
+                    </StackPanel>
+                    <ComboBox Grid.Column="1" Width="160" VerticalAlignment="Center"
+                              ItemsSource="{Binding Modes}" SelectedItem="{Binding Mode}"/>
+                </Grid>
+            </Border>
+
+            <!-- Transparency -->
+            <Border Background="#55000a05" BorderBrush="#00422a" BorderThickness="1"
+                    Padding="14,10" Margin="0,0,0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Transparency effects" FontFamily="Consolas" FontSize="13" Foreground="#C4962B"/>
+                        <TextBlock Text="Windows and surfaces appear translucent"
+                                   FontFamily="Consolas" FontSize="11" Foreground="#66888888"/>
+                    </StackPanel>
+                    <CheckBox Grid.Column="1" IsChecked="{Binding Transparency}"
+                              VerticalAlignment="Center" FontFamily="Consolas"
+                              Foreground="#C4962B" Content="On"/>
+                </Grid>
+            </Border>
+
+            <!-- Accent color -->
+            <Border Background="#55000a05" BorderBrush="#00422a" BorderThickness="1"
+                    Padding="14,10" Margin="0,0,0,8">
+                <StackPanel>
+                    <TextBlock Text="Accent color" FontFamily="Consolas" FontSize="13" Foreground="#C4962B"/>
+                    <TextBlock Text="Windows colors" FontFamily="Consolas" FontSize="11"
+                               Foreground="#66888888" Margin="0,8,0,6"/>
+
+                    <ItemsControl ItemsSource="{Binding Swatches}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="8" HorizontalAlignment="Left"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Width="46" Height="46" Margin="3" Cursor="Hand"
+                                        Background="{Binding Brush}" ToolTip="{Binding Hex}"
+                                        MouseLeftButtonUp="Swatch_Click">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="BorderBrush" Value="#22000000"/>
+                                            <Setter Property="BorderThickness" Value="1"/>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="✓" FontSize="18" FontWeight="Bold"
+                                               Foreground="White" HorizontalAlignment="Center"
+                                               VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Value="True">
+                                                        <DataTrigger.Binding>
+                                                            <MultiBinding Converter="{x:Static local:SwatchSelectedConverter.Instance}">
+                                                                <Binding/>
+                                                                <Binding Path="DataContext.SelectedSwatch"
+                                                                         RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                                            </MultiBinding>
+                                                        </DataTrigger.Binding>
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <TextBlock Text="Custom color" FontFamily="Consolas" FontSize="12"
+                                   Foreground="#A88E5E" VerticalAlignment="Center"/>
+                        <TextBox Width="110" Margin="8,0" Text="{Binding CustomHex, UpdateSourceTrigger=PropertyChanged}"
+                                 VerticalAlignment="Center" HorizontalContentAlignment="Center"/>
+                        <Button Content="Apply color" Width="110" Click="CustomHex_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Prevalence toggles -->
+            <Border Background="#55000a05" BorderBrush="#00422a" BorderThickness="1"
+                    Padding="14,10" Margin="0,0,0,8">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Show accent color on Start and taskbar"
+                               FontFamily="Consolas" FontSize="13" Foreground="#C4962B"
+                               VerticalAlignment="Center"/>
+                    <CheckBox Grid.Column="1" IsChecked="{Binding AccentOnStartTaskbar}"
+                              VerticalAlignment="Center" FontFamily="Consolas"
+                              Foreground="#C4962B" Content="On"/>
+                </Grid>
+            </Border>
+
+            <Border Background="#55000a05" BorderBrush="#00422a" BorderThickness="1"
+                    Padding="14,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Show accent color on title bars and window borders"
+                               FontFamily="Consolas" FontSize="13" Foreground="#C4962B"
+                               VerticalAlignment="Center"/>
+                    <CheckBox Grid.Column="1" IsChecked="{Binding AccentOnTitleBars}"
+                              VerticalAlignment="Center" FontFamily="Consolas"
+                              Foreground="#C4962B" Content="On"/>
+                </Grid>
+            </Border>
+
+            <TextBlock Text="{Binding StatusMessage}" FontFamily="Consolas" FontSize="12"
+                       Foreground="#C4962B" Margin="0,10,0,0" TextWrapping="Wrap"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

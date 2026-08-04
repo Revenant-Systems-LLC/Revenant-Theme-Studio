@@ -45,7 +45,7 @@ namespace Revenant_Theme_Studio.Features.Wallpaper.Services
                     return WallpaperResult.Fail("No images found on the page.");
 
                 progress?.Report(new WallpaperProgress("Downloading image...", 15));
-                var localPath = await _downloadService.DownloadImageAsync(selected.Path, ct);
+                var localPath = await _downloadService.DownloadImageAsync(selected, ct);
 
                 progress?.Report(new WallpaperProgress("Image downloaded.", 30));
 
@@ -134,6 +134,13 @@ namespace Revenant_Theme_Studio.Features.Wallpaper.Services
 
         public WallpaperConfig GetConfig() => _configService.Load();
         public void SaveConfig(WallpaperConfig config) => _configService.Save(config);
+
+        // Shared instances so the One Surface composition path reuses the same
+        // ONNX session and COM engine instead of loading its own.
+        public UpscalingService Upscaler => _upscalingService;
+        public WallpaperEngineService Engine => _wallpaperEngine;
+        public DisplayDetectionService Displays => _displayService;
+        public ImageDownloadService Downloader => _downloadService;
 
         public void Dispose()
         {

@@ -39,3 +39,13 @@ AGENTS.md
 # Release archives and Krita autosave files — never commit
 *.zip
 *.kra
+
+# --- secret + artifact baseline (Nomos Part VI), added 2026-08-04 ---
+.env
+*.env
+**/secrets/**
+**/keys/**
+*.key
+*.pem
+config.local.*
+

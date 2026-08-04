@@ -42,6 +42,9 @@ namespace Revenant_Theme_Studio.ViewModels
         public TabIconPickerViewModel SystemIconPicker { get; }
         public TabIconPickerViewModel AutoMatchIconPicker { get; }
 
+        // ── Personalization hub (v2.0): Background / Display / Colors ───────
+        public Features.Personalization.ViewModels.PersonalizationHubViewModel Personalization { get; } = new();
+
         // Auto Match results — these are tab-local so we keep them on MVM
         public ObservableCollection<AutoMatchResult> AppliedAutomatically { get; } = new();
         public ObservableCollection<AutoMatchResult> OurBestGuess { get; } = new();

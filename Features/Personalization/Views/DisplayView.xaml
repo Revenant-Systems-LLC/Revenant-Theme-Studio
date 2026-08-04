@@ -1,0 +1,172 @@
+<UserControl x:Class="Revenant_Theme_Studio.Features.Personalization.Views.DisplayView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="640">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="4,0,12,20" MaxWidth="980" HorizontalAlignment="Left">
+
+            <TextBlock Text="Select a display to change its settings. Click a display to select it."
+                       FontFamily="Consolas" FontSize="13" Foreground="#A88E5E" Margin="0,0,0,8"/>
+
+            <!-- Arrangement canvas -->
+            <Border Background="#22000000" BorderBrush="#00422a" BorderThickness="1"
+                    Height="240" Padding="20">
+                <Grid>
+                    <Viewbox Stretch="Uniform">
+                        <Grid x:Name="ArrangementGrid"
+                              Width="{Binding ArrangementWidth}"
+                              Height="{Binding ArrangementHeight}">
+                            <ItemsControl ItemsSource="{Binding Monitors}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Canvas/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        <Setter Property="Canvas.Left" Value="{Binding CanvasX}"/>
+                                        <Setter Property="Canvas.Top" Value="{Binding CanvasY}"/>
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Width="{Binding CanvasW}" Height="{Binding CanvasH}"
+                                                BorderThickness="8" Cursor="Hand"
+                                                MouseLeftButtonUp="MonitorTile_Click">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#33222222"/>
+                                                    <Setter Property="BorderBrush" Value="#444"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                            <Setter Property="Background" Value="#997a5e30"/>
+                                                            <Setter Property="BorderBrush" Value="#C4962B"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Label}" FontFamily="Consolas"
+                                                           FontWeight="Bold" FontSize="400"
+                                                           Foreground="#EEDDDDCC" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Summary}" FontFamily="Consolas"
+                                                           FontSize="120" Foreground="#AADDDDCC"
+                                                           HorizontalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Viewbox>
+                </Grid>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                <Button Content="Identify" Width="110" Click="Identify_Click"/>
+                <Button Content="Rescan" Width="110" Margin="6,0,0,0" Click="Rescan_Click"/>
+            </StackPanel>
+
+            <!-- Revert countdown band -->
+            <Border Background="#2A2008" BorderBrush="#C4962B" BorderThickness="1"
+                    Padding="14,10" Margin="0,10,0,0"
+                    Visibility="{Binding PendingRevert, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding RevertPrompt}"
+                               FontFamily="Consolas" FontSize="13" FontWeight="Bold"
+                               Foreground="#C4962B" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Keep changes" Width="130"
+                            Style="{DynamicResource GoldButton}" Click="Keep_Click"/>
+                    <Button Grid.Column="2" Content="Revert" Width="100" Margin="6,0,0,0"
+                            Click="Revert_Click"/>
+                </Grid>
+            </Border>
+
+            <!-- Scale & layout -->
+            <TextBlock Text="SCALE &amp; LAYOUT" FontFamily="Consolas" FontWeight="Bold"
+                       Foreground="#6B5820" FontSize="12" Margin="0,18,0,6"/>
+
+            <Border Background="#55000a05" BorderBrush="#00422a" BorderThickness="1" Padding="14,10">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Scale" FontFamily="Consolas" FontSize="13" Foreground="#C4962B"/>
+                            <TextBlock Text="Change the size of text, apps, and other items"
+                                       FontFamily="Consolas" FontSize="11" Foreground="#66888888"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="{Binding ScaleText}" FontFamily="Consolas"
+                                   FontSize="13" Foreground="#A88E5E" VerticalAlignment="Center"
+                                   ToolTip="Read-only for now — per-monitor scale override ships with the calibration pass."/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Display resolution" FontFamily="Consolas" FontSize="13" Foreground="#C4962B"/>
+                            <TextBlock Text="Every mode your driver exposes for this display"
+                                       FontFamily="Consolas" FontSize="11" Foreground="#66888888"/>
+                        </StackPanel>
+                        <ComboBox Grid.Column="1" Width="220" VerticalAlignment="Center"
+                                  ItemsSource="{Binding Resolutions}"
+                                  SelectedItem="{Binding SelectedResolution}"/>
+                    </Grid>
+
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Refresh rate" FontFamily="Consolas" FontSize="13" Foreground="#C4962B"/>
+                            <TextBlock Text="Rates available at the selected resolution"
+                                       FontFamily="Consolas" FontSize="11" Foreground="#66888888"/>
+                        </StackPanel>
+                        <ComboBox Grid.Column="1" Width="220" VerticalAlignment="Center"
+                                  ItemsSource="{Binding Rates}"
+                                  SelectedItem="{Binding SelectedRate}"/>
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Display orientation" FontFamily="Consolas" FontSize="13" Foreground="#C4962B"/>
+                        </StackPanel>
+                        <ComboBox Grid.Column="1" Width="220" VerticalAlignment="Center"
+                                  ItemsSource="{Binding Orientations}"
+                                  SelectedItem="{Binding SelectedOrientation}"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button Content="Apply" Width="140" Style="{DynamicResource GoldButton}"
+                        Click="Apply_Click"/>
+            </StackPanel>
+
+            <TextBlock Text="{Binding StatusMessage}" FontFamily="Consolas" FontSize="12"
+                       Foreground="#C4962B" Margin="0,10,0,0" TextWrapping="Wrap"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

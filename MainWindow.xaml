@@ -4,6 +4,7 @@
         xmlns:vm="clr-namespace:Revenant_Theme_Studio.ViewModels"
         xmlns:conv="clr-namespace:Revenant_Theme_Studio.Converters"
         xmlns:ctrls="clr-namespace:Revenant_Theme_Studio.Controls"
+        xmlns:pers="clr-namespace:Revenant_Theme_Studio.Features.Personalization.Views"
         Title="Revenant Theme Studio"
         Height="880" Width="1340"
         MinHeight="620" MinWidth="900"
@@ -593,6 +594,27 @@
                         </StackPanel>
                     </Border>
                 </Grid>
+            </TabItem>
+
+            <!-- ═══════════════ Wallpaper ═══════════════ -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Rectangle Width="16" Height="16" Margin="0,0,6,0">
+                            <Rectangle.Fill>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#C4962B" Offset="0"/>
+                                    <GradientStop Color="#7a5e30" Offset="1"/>
+                                </LinearGradientBrush>
+                            </Rectangle.Fill>
+                            <Rectangle.OpacityMask>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/rts_vector.ico" Stretch="Uniform"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
+                        <TextBlock Text="Wallpapers" FontFamily="Consolas" FontSize="13"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <pers:PersonalizationHubView DataContext="{Binding Personalization}"/>
             </TabItem>
 
             <!-- ═══════════════ Help ═══════════════ -->
