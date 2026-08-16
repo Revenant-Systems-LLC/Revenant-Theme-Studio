@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Media.Imaging;
 using Revenant_Theme_Studio.Models;
@@ -125,18 +126,22 @@ namespace Revenant_Theme_Studio.ViewModels
             iconChoice = null!;
             try
             {
-                var preview = new BitmapImage();
-                preview.BeginInit();
-                preview.UriSource   = new Uri(iconPath, UriKind.Absolute);
-                preview.CacheOption = BitmapCacheOption.OnLoad;
-                preview.EndInit();
-                preview.Freeze();
+                // A plain BitmapImage pointed at a multi-resolution .ico lets WPF pick
+                // whichever embedded frame it wants, which is often a small one
+                // stretched up to fill the thumbnail slot (blurry). Decode explicitly
+                // and pick the largest frame instead.
+                using var stream = File.OpenRead(iconPath);
+                var decoder = new IconBitmapDecoder(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
+                var bestFrame = decoder.Frames.OrderByDescending(f => f.PixelWidth).FirstOrDefault();
+                if (bestFrame == null) return false;
+                bestFrame.Freeze();
+
                 iconChoice = new IconChoice
                 {
                     ResourcePath  = iconPath,
                     ResourceIndex = 0,
                     DisplayName   = Path.GetFileNameWithoutExtension(iconPath),
-                    PreviewImage  = preview
+                    PreviewImage  = bestFrame
                 };
                 return true;
             }
