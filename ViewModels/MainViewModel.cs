@@ -355,6 +355,9 @@ namespace Revenant_Theme_Studio.ViewModels
             var applied = 0;
             var skipped = 0;
             var toRemove = new List<AutoMatchResult>();
+            // History is saved once after the loop: recording per row
+            // rewrote the whole history file each time (quadratic on big boxes).
+            var records = new List<ChangeRecord>();
             foreach (var row in box.ToList())
             {
                 if (string.IsNullOrEmpty(row.AssignedIconPath) || !File.Exists(row.AssignedIconPath))
@@ -365,7 +368,7 @@ namespace Revenant_Theme_Studio.ViewModels
                     var previous  = _folderIconService.GetCurrentIconReference(row.TargetPath);
                     var reference = $"\"{managed}\",0";
                     _folderIconService.ApplyIconReference(row.TargetPath, reference);
-                    _historyService.Record(new ChangeRecord
+                    records.Add(new ChangeRecord
                     {
                         BackupId      = Guid.NewGuid().ToString("N"),
                         TargetType    = IconTargetType.Folder,
@@ -384,6 +387,17 @@ namespace Revenant_Theme_Studio.ViewModels
                 }
             }
             foreach (var r in toRemove) box.Remove(r);
+
+            try
+            {
+                _historyService.RecordMany(records);
+            }
+            catch (Exception ex)
+            {
+                // The icons above are already applied; say that undo won't cover them.
+                StatusMessage = $"{boxName}: arose {applied}, skipped {skipped}. Change history could not be saved: {ex.Message}";
+                return;
+            }
             StatusMessage = $"{boxName}: arose {applied}, skipped {skipped}.";
         }
 

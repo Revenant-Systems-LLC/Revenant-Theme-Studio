@@ -40,6 +40,25 @@ namespace Revenant_Theme_Studio.Services
             }
         }
 
+        /// <summary>
+        /// Appends several records with a single read and write of the history
+        /// file. Bulk operations (Auto Match "Arise") use this: calling
+        /// <see cref="Record"/> per folder rewrote the whole file every time,
+        /// which made large runs quadratic.
+        /// </summary>
+        public void RecordMany(IEnumerable<ChangeRecord> records)
+        {
+            var batch = records.ToList();
+            if (batch.Count == 0) return;
+
+            lock (_fileLock)
+            {
+                var all = ReadUnsafe().ToList();
+                all.AddRange(batch);
+                File.WriteAllText(_historyPath, JsonSerializer.Serialize(all, _jsonOptions));
+            }
+        }
+
         public void RemoveLast()
         {
             lock (_fileLock)
