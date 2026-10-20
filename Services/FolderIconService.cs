@@ -25,7 +25,11 @@ namespace Revenant_Theme_Studio.Services
             {
                 if (line.StartsWith("IconResource=", StringComparison.OrdinalIgnoreCase))
                 {
-                    return line["IconResource=".Length..].Trim().Trim('"');
+                    // Return the value verbatim (e.g. "C:\Icons\my icon.ico",0).
+                    // It is recorded as PreviousValue and written back as-is by
+                    // undo; Trim('"') here turned it into C:\Icons\my icon.ico",0.
+                    // Callers that need the bare path parse it themselves.
+                    return line["IconResource=".Length..].Trim();
                 }
             }
 
