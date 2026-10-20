@@ -78,10 +78,12 @@ namespace Revenant_Theme_Studio.ViewModels
                 var previous = _systemResourcePath;
                 _systemResourcePath = value;
                 OnPropertyChanged();
-                // The path box pushes every keystroke, so only reload when the
-                // system icons can actually change: system icons are included
-                // and the old or new path is a real file.
-                if (IncludeSystemIcons && (File.Exists(previous) || File.Exists(value)))
+                // The path box pushes every keystroke, so only reload once the
+                // text names a different, existing file. Reloading on a
+                // half-typed path would clear IconList and drop the selection.
+                if (IncludeSystemIcons &&
+                    !string.Equals(previous, value, StringComparison.OrdinalIgnoreCase) &&
+                    File.Exists(value))
                     ReloadIcons();
             }
         }
