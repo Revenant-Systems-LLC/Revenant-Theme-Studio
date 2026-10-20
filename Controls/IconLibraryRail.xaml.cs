@@ -38,11 +38,9 @@ namespace Revenant_Theme_Studio.Controls
                 CheckFileExists = true,
                 Multiselect = false
             };
-            if (dialog.ShowDialog() == true)
-            {
-                Vm.SystemResourcePath = dialog.FileName;
-                Vm.ReloadIcons();
-            }
+            // The setter reloads the list (this button is only enabled while
+            // system icons are included, and the dialog requires an existing file).
+            if (dialog.ShowDialog() == true) Vm.SystemResourcePath = dialog.FileName;
         }
     }
 }
