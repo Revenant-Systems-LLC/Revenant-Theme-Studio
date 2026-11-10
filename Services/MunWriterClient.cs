@@ -9,27 +9,61 @@ namespace Revenant_Theme_Studio.Services
 {
     public record MunCommitRequest(string Target, IReadOnlyList<(int GroupId, byte[] IcoBytes)> Replacements);
 
-    public class MunWriterClient
+    /// <summary>The elevated imageres.dll.mun writer, as the theme engine sees it (faked in tests).</summary>
+    public interface IMunWriter
+    {
+        (bool success, string message) Commit(MunCommitRequest request);
+        /// <summary>Puts the preserved Windows original back (undo of every RTS system-icon change).</summary>
+        (bool success, string message) Restore(string target);
+    }
+
+    public class MunWriterClient : IMunWriter
     {
         private static readonly string HelperPath = Path.Combine(
             AppContext.BaseDirectory, "RTS.MunWriter.exe");
+
+        private static readonly string[] HelperFiles =
+        {
+            HelperPath,
+            Path.Combine(AppContext.BaseDirectory, "RTS.MunWriter.dll"),
+            Path.Combine(AppContext.BaseDirectory, "RTS.MunWriter.runtimeconfig.json"),
+        };
 
         [DllImport("sfc.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern bool SfcIsFileProtected(IntPtr hRpcHandle, string FileName);
 
         public (bool success, string message) Commit(MunCommitRequest request)
         {
-            if (!File.Exists(HelperPath))
-                return (false, $"Helper not found at:\n{HelperPath}\n\nRebuild the solution.");
+            // The helper is framework-dependent: the .exe cannot start without these beside it.
+            foreach (var required in HelperFiles)
+            {
+                if (!File.Exists(required))
+                    return (false, $"Helper file missing:\n{required}\n\nRebuild the solution.");
+            }
 
             var validation = ValidateTarget(request.Target);
             if (!validation.success)
                 return validation;
 
-            return RunHelper(request);
+            return RunHelper(request, "replace");
         }
 
-        private static (bool success, string message) RunHelper(MunCommitRequest request)
+        public (bool success, string message) Restore(string target)
+        {
+            foreach (var required in HelperFiles)
+            {
+                if (!File.Exists(required))
+                    return (false, $"Helper file missing:\n{required}\n\nRebuild the solution.");
+            }
+            var validation = ValidateTarget(target);
+            if (!validation.success)
+                return validation;
+
+            var (ok, message) = RunHelper(new MunCommitRequest(target, Array.Empty<(int, byte[])>()), "restore");
+            return ok ? (true, "The original Windows icons are back. Restart Explorer or sign out to see them everywhere.") : (false, message);
+        }
+
+        private static (bool success, string message) RunHelper(MunCommitRequest request, string mode)
         {
             string tempDir = Path.Combine(Path.GetTempPath(), $"rts_mun_{Guid.NewGuid():N}");
             Directory.CreateDirectory(tempDir);
@@ -50,6 +84,7 @@ namespace Revenant_Theme_Studio.Services
                 File.WriteAllText(jobPath, JsonSerializer.Serialize(new
                 {
                     Target       = request.Target,
+                    Mode         = mode,
                     Replacements = replacements
                 }, new JsonSerializerOptions { WriteIndented = true }));
 
@@ -86,7 +121,8 @@ namespace Revenant_Theme_Studio.Services
                 proc.WaitForExit();
 
                 if (proc.ExitCode == 0)
-                    return (true, "Changes applied successfully.");
+                    return (true, "Changes applied. Programs that are already running keep the old icons " +
+                                  "until they restart: restart Explorer or sign out to see them everywhere.");
 
                 return (false, GetErrorMessage(proc.ExitCode, request.Target));
             }
@@ -139,21 +175,47 @@ namespace Revenant_Theme_Studio.Services
         private static string GetErrorMessage(int exitCode, string targetPath) =>
             exitCode switch
             {
-                -2147450726 => "Windows Resource Protection blocked the update.\n\n" +
-                    "Run 'sfc /scannow' from an admin Command Prompt, then try again.",
+                // 0x800080xx is the .NET host's own error range (hostfxr), raised before any
+                // helper code runs. It was previously mislabeled as a Windows Resource
+                // Protection error.
+                _ when (exitCode & unchecked((int)0xFFFFFF00)) == unchecked((int)0x80008000) =>
+                    $"The helper could not start (.NET host error 0x{exitCode:X8}).\n\n" +
+                    "Its files may be missing beside the app, or the .NET 8 runtime is not installed.",
 
-                2 => "Permission modification failed.\n\n" +
-                    "Try running Revenant Theme Studio as Administrator.",
+                1 => "The helper could not read its job file.",
 
-                3 => $"Resource update failed for:\n{targetPath}\n\n" +
-                    "The file may be in use or corrupted. Close Explorer and try again.",
+                5 => $"The helper refused the job: it only edits {targetPath} " +
+                    "under Windows\\SystemResources, with icon files from its own job folder.",
 
-                4 => $"Resource commit failed for:\n{targetPath}\n\n" +
-                    "Check disk space and file permissions, then try again.",
+                // Staged failures: stage * 100000 + Win32 error (see RTS.MunWriter\Program.cs).
+                >= 100000 and < 900000 => StageMessage(exitCode / 100000, exitCode % 100000, targetPath),
 
                 _ => $"Helper exited with code {exitCode}.\n\n" +
                     $"Target: {targetPath}\n\n" +
                     "Try running Revenant Theme Studio as Administrator."
             };
+
+        private static string StageMessage(int stage, int win32, string targetPath)
+        {
+            string why = win32 == 0 ? "" :
+                $"\n\nWindows error {win32}: {new System.ComponentModel.Win32Exception(win32).Message}";
+            return stage switch
+            {
+                1 => "Could not make a private working copy of the icon file. Nothing was changed." + why,
+                2 => "Could not write the new icons into the working copy. Nothing was changed." + why,
+                3 => "The patched copy failed its check, so it was thrown away. Nothing was changed." + why,
+                4 => "Could not get temporary write access to Windows\\SystemResources. Nothing was changed." + why,
+                5 => "Could not move the current icon file aside. Nothing was changed." + why,
+                6 => "Could not move the new icon file into place, so the original was put back." + why,
+                7 => "The new icons are in place, but the file or folder permissions may not be fully " +
+                     "restored to the Windows defaults." + why,
+                8 => $"CRITICAL: the new file could not be moved in and the original could not be put back. " +
+                     $"{targetPath} may be missing; the original is beside it as imageres.dll.mun.rts-original-*. " +
+                     "Run 'sfc /scannow' from an admin Command Prompt to restore it." + why,
+                9 => "There is nothing to restore: either RTS never changed this file, or Windows has " +
+                     "already replaced it with its own." + why,
+                _ => $"Helper failed at stage {stage}." + why,
+            };
+        }
     }
 }

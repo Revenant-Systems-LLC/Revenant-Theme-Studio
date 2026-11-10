@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Media.Imaging;
 using Revenant_Theme_Studio.Models;
 using Revenant_Theme_Studio.Services;
+using Revenant_Theme_Studio.Features.Licensing;
 
 namespace Revenant_Theme_Studio.ViewModels
 {
@@ -59,7 +60,7 @@ namespace Revenant_Theme_Studio.ViewModels
                 if (RequiresProForGunmetal &&
                     !string.IsNullOrEmpty(value) &&
                     value.Contains("gunmetal-theme", StringComparison.OrdinalIgnoreCase) &&
-                    !LicenseService.Instance.IsPro)
+                    !FeatureGate.Allows(Feature.GunmetalIconPack))
                 {
                     OnStatusMessage?.Invoke($"[{TabName}] Gunmetal theme requires RTS Pro.");
                     return;
@@ -82,7 +83,7 @@ namespace Revenant_Theme_Studio.ViewModels
             get => _includeSystemIcons;
             set
             {
-                if (value && !LicenseService.Instance.IsPro)
+                if (value && !FeatureGate.Allows(Feature.SystemIconBrowser))
                 {
                     OnStatusMessage?.Invoke($"[{TabName}] System icon browser requires RTS Pro.");
                     return;

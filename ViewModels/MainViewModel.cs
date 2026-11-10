@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Revenant_Theme_Studio.Models;
 using Revenant_Theme_Studio.Services;
+using Revenant_Theme_Studio.Features.Licensing;
 
 namespace Revenant_Theme_Studio.ViewModels
 {
@@ -44,6 +45,9 @@ namespace Revenant_Theme_Studio.ViewModels
 
         // ── Personalization hub (v2.0): Background / Display / Colors ───────
         public Features.Personalization.ViewModels.PersonalizationHubViewModel Personalization { get; } = new();
+
+        // ── Themes (Phase 1): bundles applied, verified and undone as one transaction ──
+        public Features.Themes.ViewModels.ThemesViewModel Themes { get; } = new();
 
         // Auto Match results — these are tab-local so we keep them on MVM
         public ObservableCollection<AutoMatchResult> AppliedAutomatically { get; } = new();
@@ -189,7 +193,7 @@ namespace Revenant_Theme_Studio.ViewModels
         // ── Apply: System (formerly Shell) ───────────────────────────────────
         public void ApplySystemIcon()
         {
-            if (!LicenseService.Instance.IsPro) { StatusMessage = "System icon overrides require RTS Pro."; return; }
+            if (!FeatureGate.Allows(Feature.SystemIconOverrides)) { StatusMessage = "System icon overrides require RTS Pro."; return; }
             var picked = SystemIconPicker.SelectedIcon;
             if (picked == null) { StatusMessage = "Select an icon from the System Icons rail."; return; }
 
@@ -216,7 +220,7 @@ namespace Revenant_Theme_Studio.ViewModels
         // "Arise" button, which commits just that box.
         public async Task AriseAsync()
         {
-            if (!LicenseService.Instance.IsPro) { StatusMessage = "Auto Match requires RTS Pro."; return; }
+            if (!FeatureGate.Allows(Feature.AutoMatch)) { StatusMessage = FeatureGate.LockedMessage("Auto Match"); return; }
             if (IsAutoRunning) return;
             if (string.IsNullOrWhiteSpace(ScanRoot) || !Directory.Exists(ScanRoot)) { StatusMessage = "Scan root does not exist."; return; }
 
@@ -344,7 +348,7 @@ namespace Revenant_Theme_Studio.ViewModels
         // writes — the scan itself is dry-run.
         public void AriseBox(ObservableCollection<AutoMatchResult> box, string boxName)
         {
-            if (!LicenseService.Instance.IsPro) { StatusMessage = "Arise requires RTS Pro."; return; }
+            if (!FeatureGate.Allows(Feature.AutoMatchApply)) { StatusMessage = FeatureGate.LockedMessage("Arise"); return; }
             var applied = 0;
             var skipped = 0;
             var toRemove = new List<AutoMatchResult>();
@@ -382,24 +386,42 @@ namespace Revenant_Theme_Studio.ViewModels
 
         public void UndoLastChange()
         {
-            if (!LicenseService.Instance.IsPro) { StatusMessage = "Undo requires RTS Pro."; return; }
+            if (!FeatureGate.Allows(Feature.UndoIconChange)) { StatusMessage = FeatureGate.LockedMessage("Undo"); return; }
             var last = _historyService.GetLast();
             if (last == null) { StatusMessage = "No changes available to undo."; return; }
 
-            switch (last.TargetType)
+            try
             {
-                case IconTargetType.Folder:
-                    if (string.IsNullOrWhiteSpace(last.PreviousValue)) _folderIconService.RemoveIcon(last.TargetPath);
-                    else _folderIconService.ApplyIconReference(last.TargetPath, last.PreviousValue);
-                    break;
-                case IconTargetType.Drive:
-                    if (string.IsNullOrWhiteSpace(last.PreviousValue)) _driveIconService.RestoreIcon(last.TargetPath);
-                    else _driveIconService.ApplyIcon(last.TargetPath, last.PreviousValue);
-                    break;
-                case IconTargetType.Shell:
-                    if (string.IsNullOrWhiteSpace(last.PreviousValue)) _shellIconService.RestoreDefault(last.TargetPath);
-                    else _shellIconService.ApplyOverride(last.TargetPath, last.PreviousValue);
-                    break;
+                switch (last.TargetType)
+                {
+                    case IconTargetType.Folder:
+                        if (string.IsNullOrWhiteSpace(last.PreviousValue)) _folderIconService.RemoveIcon(last.TargetPath);
+                        else _folderIconService.ApplyIconReference(last.TargetPath, last.PreviousValue);
+                        break;
+                    case IconTargetType.Drive:
+                        if (string.IsNullOrWhiteSpace(last.PreviousValue)) _driveIconService.RestoreIcon(last.TargetPath);
+                        else _driveIconService.ApplyIcon(last.TargetPath, last.PreviousValue);
+                        break;
+                    case IconTargetType.Shell:
+                        if (string.IsNullOrWhiteSpace(last.PreviousValue)) _shellIconService.RestoreDefault(last.TargetPath);
+                        else _shellIconService.ApplyOverride(last.TargetPath, last.PreviousValue);
+                        break;
+                    case IconTargetType.MunFile:
+                        // Restoring imageres.dll.mun needs the elevated helper, which has no
+                        // restore mode yet. Say so and keep the record, rather than deleting
+                        // it and reporting an undo that never happened.
+                        StatusMessage = "System icon (imageres) changes can't be undone from history yet. " +
+                                        $"The original file is backed up at: {last.PreviousValue}";
+                        return;
+                    default:
+                        StatusMessage = $"Undo is not supported for {last.TargetType} changes.";
+                        return;
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = $"Undo failed, nothing was removed from history: {ex.Message}";
+                return;
             }
 
             _historyService.RemoveLast();

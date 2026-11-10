@@ -1,0 +1,33 @@
+<Configuration>
+  <!-- Disposable Windows Sandbox for Theme Studio tests. Everything inside is
+       thrown away when the window closes, so registry writes, Explorer restarts
+       and system-icon patches can't touch Yggdrasil.
+
+       Locked down on purpose:
+       - VGpu Disable: 0 VRAM on the host (Yggdrasil's VRAM budget is 0 target, 1 GB ceiling).
+       - Networking Disable: the kit is offline and nothing inside should phone out.
+       - Only two host folders are visible: kit\ (read-only) and results\ (the one
+         place the sandbox can write back to the host). -->
+  <VGpu>Disable</VGpu>
+  <Networking>Disable</Networking>
+  <AudioInput>Disable</AudioInput>
+  <VideoInput>Disable</VideoInput>
+  <ClipboardRedirection>Disable</ClipboardRedirection>
+  <PrinterRedirection>Disable</PrinterRedirection>
+  <MemoryInMB>4096</MemoryInMB>
+  <MappedFolders>
+    <MappedFolder>
+      <HostFolder>M:\Projects\revenant-theme-studio\tests\sandbox\kit</HostFolder>
+      <SandboxFolder>C:\rts\kit</SandboxFolder>
+      <ReadOnly>true</ReadOnly>
+    </MappedFolder>
+    <MappedFolder>
+      <HostFolder>M:\Projects\revenant-theme-studio\tests\sandbox\results</HostFolder>
+      <SandboxFolder>C:\rts\results</SandboxFolder>
+      <ReadOnly>false</ReadOnly>
+    </MappedFolder>
+  </MappedFolders>
+  <LogonCommand>
+    <Command>powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\rts\kit\run.ps1</Command>
+  </LogonCommand>
+</Configuration>

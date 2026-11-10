@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
+using Revenant_Theme_Studio.Features.Themes.Platform;
+
 namespace Revenant_Theme_Studio.Features.Wallpaper.Services
 {
-    public class WallpaperEngineService : IWallpaperEngineService
+    public class WallpaperEngineService : IWallpaperEngineService, IWallpaperApi
     {
         [ComImport]
         [Guid("B92B56A9-8B55-4E14-9A89-0199BBB6F93B")]
@@ -104,6 +106,50 @@ namespace Revenant_Theme_Studio.Features.Wallpaper.Services
             }
             catch { return null; }
         }
+
+        // ── IWallpaperApi: exact per-monitor read and write for the theme engine ──
+        // Each call creates the COM object and releases it, so nothing stays bound
+        // to a stale desktop after Explorer restarts.
+
+        private static T WithDesktop<T>(Func<IDesktopWallpaper, T> work)
+        {
+            var desktop = (IDesktopWallpaper)new DesktopWallpaperClass();
+            try { return work(desktop); }
+            finally { Marshal.ReleaseComObject(desktop); }
+        }
+
+        private static void WithDesktop(Action<IDesktopWallpaper> work) =>
+            WithDesktop<object?>(d => { work(d); return null; });
+
+        public IReadOnlyList<MonitorInfo> Monitors() => WithDesktop(d =>
+        {
+            var list = new List<MonitorInfo>();
+            uint count = d.GetMonitorDevicePathCount();
+            for (uint i = 0; i < count; i++)
+            {
+                var id = d.GetMonitorDevicePathAt(i);
+                // Detached monitors are listed too; GetMonitorRECT fails for them.
+                try { d.GetMonitorRECT(id, out var r); list.Add(new MonitorInfo(id, r.Left, r.Top, r.Right, r.Bottom)); }
+                catch (COMException) { }
+            }
+            return (IReadOnlyList<MonitorInfo>)list;
+        });
+
+        public string GetWallpaper(string monitorId) => WithDesktop(d => d.GetWallpaper(monitorId) ?? "");
+
+        public void SetWallpaper(string? monitorId, string path) => WithDesktop(d => d.SetWallpaper(monitorId!, path));
+
+        public int GetPosition() => WithDesktop(d => (int)d.GetPosition());
+
+        public void SetPosition(int position)
+        {
+            if (position is < 0 or > 5) throw new ArgumentOutOfRangeException(nameof(position));
+            WithDesktop(d => d.SetPosition((DesktopWallpaperPosition)position));
+        }
+
+        public uint GetBackgroundColor() => WithDesktop(d => d.GetBackgroundColor());
+
+        public void SetBackgroundColor(uint colorRef) => WithDesktop(d => d.SetBackgroundColor(colorRef));
 
         private static string? GetMonitorDevicePath(IDesktopWallpaper desktop, MonitorProfile target)
         {

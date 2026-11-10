@@ -36,12 +36,21 @@
       Keep this here even when no worktrees are present — agent runs may
       drop new ones in at any time and this makes the project bulletproof.
     -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);.claude\**;RTS.MunWriter\**</DefaultItemExcludes>
+    <!-- tests\ holds separate test projects and published test kits; never compile them into the app. -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);.claude\**;RTS.MunWriter\**;tests\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <Target Name="BuildAndCopyMunWriter" AfterTargets="Build">
     <Exec Command="dotnet build &quot;$(MSBuildThisFileDirectory)RTS.MunWriter\RTS.MunWriter.csproj&quot; -c $(Configuration) -r win-x64 --no-self-contained" ContinueOnError="true" />
-    <Copy SourceFiles="$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.exe" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" ContinueOnError="true" />
+    <!-- RTS.MunWriter is framework-dependent: the .exe is only a launcher stub and
+         cannot start without its .dll, .runtimeconfig.json and .deps.json beside it.
+         Copying the .exe alone is what left the MUN editor unable to run. -->
+    <ItemGroup>
+      <_MunWriterFiles Include="$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.exe;$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.dll;$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.runtimeconfig.json;$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.deps.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_MunWriterFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" ContinueOnError="true" />
+    <Warning Condition="!Exists('$(OutputPath)RTS.MunWriter.dll') Or !Exists('$(OutputPath)RTS.MunWriter.runtimeconfig.json')"
+             Text="RTS.MunWriter helper files are missing from $(OutputPath). The MUN editor will not be able to apply changes." />
   </Target>
 
   <ItemGroup>

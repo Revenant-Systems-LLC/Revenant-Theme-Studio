@@ -1,203 +1,262 @@
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Revenant_Theme_Studio.Models
 {
     /// <summary>
-    /// Schema for a Revenant Theme Studio theme bundle (.rtstheme zip).
+    /// The Revenant Theme Studio theme bundle (.rtstheme zip), schema rts.theme/v2.
+    /// Spec: docs\specs\spec-phase1-theme-engine.md (F1) and docs\specs\README.md (section 1).
     ///
-    /// The bundle is a zip with this layout:
-    ///   manifest.json     ← serialized <see cref="ThemeBundle"/>
-    ///   preview.png       ← marketplace thumbnail (optional in v1)
-    ///   icons/            ← .ico files referenced by manifest
-    ///   wallpapers/       ← reserved for v2
-    ///   fonts/            ← reserved
-    ///   sounds/           ← reserved
-    ///   livewall/         ← reserved
-    ///   ui/               ← reserved (the "go crazy" tier)
-    ///   LICENSE.txt       ← optional
-    ///   SIGNATURE         ← reserved for marketplace signing
+    ///   manifest.json   this object
+    ///   preview.png     optional thumbnail
+    ///   LICENSE.txt     optional
+    ///   icons/ wallpapers/ lockscreen/ cursors/ sounds/   assets, listed in <see cref="Files"/>
     ///
-    /// Design tenets — this is the contract that ships to the future
-    /// marketplace, so once we cut v1 we don't reshape it casually:
-    ///
-    ///   1. Asset categories are namespaced under <see cref="ThemeAssets"/>
-    ///      so future asset types slot in additively without breaking old
-    ///      themes. A v1 icon-only theme stays valid forever.
-    ///
-    ///   2. <see cref="MinRtsVersion"/> lets a v3 theme refuse to install on
-    ///      a v1 RTS rather than failing in obscure ways.
-    ///
-    ///   3. <see cref="MunSwap.SourceFingerprint"/> stores the SHA256 of the
-    ///      original Microsoft icon at the time the swap was authored. When
-    ///      we replay swaps against a freshly-updated .mun and the icon at
-    ///      that resource ID has been renumbered or repurposed by Microsoft,
-    ///      we surface a remap prompt instead of silently overwriting the
-    ///      wrong icon.
-    ///
-    ///   4. Asset paths are relative to the bundle root, forward-slashed
-    ///      (zip convention), and never escape the bundle (no "../").
+    /// Rules the reader enforces (Features\Themes\Bundles\BundleReader):
+    ///   1. Data only. Images, icons, cursors and sounds; never executables, scripts, HTML or SVG.
+    ///   2. Every file in the zip is listed in <see cref="Files"/> with its SHA-256, and nothing else is in the zip.
+    ///   3. Paths are bundle-relative, forward-slashed, and never escape the bundle.
+    ///   4. A section missing from <see cref="ThemeAssets"/> is left untouched on apply.
+    ///   5. rts.theme/v1 bundles still load: their systemIcons and shellOverrides map into icons.
     /// </summary>
     public class ThemeBundle
     {
-        public const string CurrentSchema = "rts.theme/v1";
+        public const string SchemaV1 = "rts.theme/v1";
+        public const string SchemaV2 = "rts.theme/v2";
+        public const string CurrentSchema = SchemaV2;
 
-        /// <summary>Schema discriminator. Always "rts.theme/v1" for v1 bundles.</summary>
-        [JsonPropertyName("schema")]
-        public string Schema { get; set; } = CurrentSchema;
+        [JsonPropertyName("schema")] public string Schema { get; set; } = CurrentSchema;
 
-        /// <summary>
-        /// Stable globally-unique handle. Used by the future marketplace to
-        /// track listings and updates across version bumps. Convention:
-        /// kebab-case, "author-themename" (e.g. "revenant-bone").
-        /// </summary>
-        [JsonPropertyName("id")]
-        public string Id { get; set; } = string.Empty;
+        /// <summary>Stable handle, kebab-case "author-themename". Also the library folder name.</summary>
+        [JsonPropertyName("id")] public string Id { get; set; } = string.Empty;
+        [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
+        [JsonPropertyName("author")] public string Author { get; set; } = string.Empty;
+        [JsonPropertyName("version")] public string Version { get; set; } = "1.0.0";
 
-        /// <summary>Human-readable theme name shown in UI and storefront.</summary>
-        [JsonPropertyName("name")]
-        public string Name { get; set; } = string.Empty;
+        /// <summary>Oldest RTS that can apply this bundle. Newer bundles refuse cleanly on older apps.</summary>
+        [JsonPropertyName("minRtsVersion")] public string MinRtsVersion { get; set; } = "2.0.0";
+        [JsonPropertyName("description")] public string? Description { get; set; }
+        [JsonPropertyName("preview")] public string? Preview { get; set; }
+        [JsonPropertyName("license")] public string? License { get; set; }
 
-        [JsonPropertyName("author")]
-        public string Author { get; set; } = string.Empty;
+        /// <summary>Section keys a reader must understand. A reader that doesn't, refuses the bundle.</summary>
+        [JsonPropertyName("requires")] public List<string>? Requires { get; set; }
+        [JsonPropertyName("gate")] public Gate? Gate { get; set; }
+        [JsonPropertyName("origin")] public BundleOrigin? Origin { get; set; }
+        [JsonPropertyName("files")] public List<BundleFile>? Files { get; set; }
 
-        /// <summary>Theme semver (e.g. "1.0.0"). Author-controlled.</summary>
-        [JsonPropertyName("version")]
-        public string Version { get; set; } = "1.0.0";
+        [JsonPropertyName("assets")] public ThemeAssets Assets { get; set; } = new();
+    }
 
-        /// <summary>
-        /// Minimum RTS version that can install this theme. Newer themes
-        /// using assets a given RTS doesn't understand should bump this so
-        /// installation refuses cleanly instead of silently dropping assets.
-        /// </summary>
-        [JsonPropertyName("minRtsVersion")]
-        public string MinRtsVersion { get; set; } = "1.0.0";
+    public class BundleFile
+    {
+        [JsonPropertyName("path")] public string Path { get; set; } = string.Empty;
+        [JsonPropertyName("sha256")] public string Sha256 { get; set; } = string.Empty;
+        [JsonPropertyName("bytes")] public long Bytes { get; set; }
+    }
 
-        [JsonPropertyName("description")]
-        public string? Description { get; set; }
-
-        /// <summary>Path inside the bundle to the marketplace thumbnail.</summary>
-        [JsonPropertyName("preview")]
-        public string? Preview { get; set; }
-
-        /// <summary>Optional path inside the bundle to a license file.</summary>
-        [JsonPropertyName("license")]
-        public string? License { get; set; }
-
-        [JsonPropertyName("assets")]
-        public ThemeAssets Assets { get; set; } = new();
+    public class BundleOrigin
+    {
+        /// <summary>native, windowsTheme, ddw or capture.</summary>
+        [JsonPropertyName("kind")] public string Kind { get; set; } = "native";
+        [JsonPropertyName("name")] public string? Name { get; set; }
+        [JsonPropertyName("importedUtc")] public string? ImportedUtc { get; set; }
     }
 
     /// <summary>
-    /// Asset category catalog. Every category is optional; future asset
-    /// types slot in as additional properties without breaking v1 themes.
+    /// A Windows build gate. Builds are "26300" or "26300.9711" (numbers are accepted too).
+    /// <see cref="FileVersion"/> gates system-icon edits on the .mun file's own version.
+    /// </summary>
+    public class Gate
+    {
+        [JsonPropertyName("minBuild")] [JsonConverter(typeof(BuildTextConverter))] public string? MinBuild { get; set; }
+        [JsonPropertyName("maxBuild")] [JsonConverter(typeof(BuildTextConverter))] public string? MaxBuild { get; set; }
+        [JsonPropertyName("fileVersion")] public List<string>? FileVersion { get; set; }
+        /// <summary>skip (default) or fail.</summary>
+        [JsonPropertyName("onUnsupported")] public string? OnUnsupported { get; set; }
+    }
+
+    /// <summary>
+    /// Asset sections. Phase 1 applies icons, wallpaper and colors. Every other section
+    /// (cursors, sounds, metrics, screensaver, lockScreen, tweaks, console, visualStyle, schedule)
+    /// is kept verbatim in <see cref="Other"/> so re-exporting never loses it.
     /// </summary>
     public class ThemeAssets
     {
-        [JsonPropertyName("systemIcons")]
-        public SystemIconAssets? SystemIcons { get; set; }
+        [JsonPropertyName("icons")] public IconSettings? Icons { get; set; }
+        [JsonPropertyName("wallpaper")] public WallpaperSettings? Wallpaper { get; set; }
+        [JsonPropertyName("colors")] public ColorSettings? Colors { get; set; }
 
-        // ── Reserved for future versions. Properties are deliberately
-        //    commented out rather than declared-but-null so the JSON stays
-        //    minimal in v1. When the wallpapers tier ships, we add the
-        //    property + class in the same release.
-        //
-        // [JsonPropertyName("wallpapers")]    public WallpaperAssets?    Wallpapers    { get; set; }
-        // [JsonPropertyName("fonts")]         public FontAssets?         Fonts         { get; set; }
-        // [JsonPropertyName("sounds")]        public SoundAssets?        Sounds        { get; set; }
-        // [JsonPropertyName("liveWallpapers")] public LiveWallpaperAssets? LiveWallpapers { get; set; }
-        // [JsonPropertyName("ui")]            public UiAssets?           Ui            { get; set; }
+        /// <summary>v1 only. Mapped into <see cref="Icons"/> when read, never written.</summary>
+        [JsonPropertyName("systemIcons")] public SystemIconAssets? SystemIcons { get; set; }
+        /// <summary>v1 only. Mapped into <see cref="Icons"/> when read, never written.</summary>
+        [JsonPropertyName("shellOverrides")] public List<ShellOverride>? ShellOverrides { get; set; }
 
-        /// <summary>
-        /// Per-target overrides for non-protected icons (folder/drive/system
-        /// shell entries that don't require .mun editing). Mirrors the
-        /// existing Apply* flows so a theme can ship both .mun swaps AND
-        /// HKCU registry overrides as a single bundle.
-        /// </summary>
-        [JsonPropertyName("shellOverrides")]
-        public List<ShellOverride>? ShellOverrides { get; set; }
+        [JsonExtensionData] public Dictionary<string, JsonElement>? Other { get; set; }
+    }
+
+    // ── icons ────────────────────────────────────────────────────────────────
+
+    public class IconSettings
+    {
+        [JsonPropertyName("gate")] public Gate? Gate { get; set; }
+        [JsonPropertyName("targets")] public List<IconTarget> Targets { get; set; } = new();
     }
 
     /// <summary>
-    /// Asset block for icons that live inside imageres.dll.mun (or, in
-    /// principle, any other PE resource container — the schema doesn't
-    /// hardcode the .mun filename).
+    /// One icon to change. Phase 1 applies kinds "shell" (a ShellIconService target by name or
+    /// CLSID), "drive" (a drive letter) and "system" (an imageres.dll.mun icon group).
     /// </summary>
+    public class IconTarget
+    {
+        [JsonPropertyName("kind")] public string Kind { get; set; } = string.Empty;
+        /// <summary>Shell target name or CLSID, or a drive letter.</summary>
+        [JsonPropertyName("match")] public string? Match { get; set; }
+        /// <summary>Icon group ID, for kind "system".</summary>
+        [JsonPropertyName("group")] public int? Group { get; set; }
+        /// <summary>Bundle-relative .ico, or an allowed system reference such as "%SystemRoot%\System32\imageres.dll,-109".</summary>
+        [JsonPropertyName("file")] public string? File { get; set; }
+        /// <summary>Recycle Bin only: the icon when it has items.</summary>
+        [JsonPropertyName("fullFile")] public string? FullFile { get; set; }
+        [JsonPropertyName("sourceFingerprint")] public string? SourceFingerprint { get; set; }
+        [JsonPropertyName("label")] public string? Label { get; set; }
+        [JsonPropertyName("gate")] public Gate? Gate { get; set; }
+    }
+
+    // ── wallpaper ────────────────────────────────────────────────────────────
+
+    public class WallpaperSettings
+    {
+        /// <summary>static, perMonitor, timeOfDay or slideshow.</summary>
+        [JsonPropertyName("kind")] public string Kind { get; set; } = "static";
+        /// <summary>center, tile, stretch, fit, fill or span.</summary>
+        [JsonPropertyName("fit")] public string? Fit { get; set; }
+        /// <summary>#RRGGBB shown around a centered or fitted image.</summary>
+        [JsonPropertyName("backgroundColor")] public string? BackgroundColor { get; set; }
+        [JsonPropertyName("static")] public StaticWallpaper? Static { get; set; }
+        [JsonPropertyName("perMonitor")] public List<MonitorWallpaper>? PerMonitor { get; set; }
+        [JsonPropertyName("timeOfDay")] public TimeOfDayWallpaper? TimeOfDay { get; set; }
+        [JsonPropertyName("gate")] public Gate? Gate { get; set; }
+        [JsonExtensionData] public Dictionary<string, JsonElement>? Other { get; set; }
+    }
+
+    public class StaticWallpaper
+    {
+        [JsonPropertyName("file")] public string File { get; set; } = string.Empty;
+    }
+
+    public class MonitorWallpaper
+    {
+        [JsonPropertyName("match")] public MonitorMatch Match { get; set; } = new();
+        [JsonPropertyName("file")] public string File { get; set; } = string.Empty;
+    }
+
+    /// <summary>Which monitor. Device paths are machine-specific, so bundles never store them.</summary>
+    public class MonitorMatch
+    {
+        /// <summary>0-based, in the order Windows lists monitors.</summary>
+        [JsonPropertyName("ordinal")] public int? Ordinal { get; set; }
+        /// <summary>primary, left, right, top or bottom.</summary>
+        [JsonPropertyName("position")] public string? Position { get; set; }
+    }
+
+    public class TimeOfDayWallpaper
+    {
+        [JsonPropertyName("segments")] public TimeOfDaySegments Segments { get; set; } = new();
+        [JsonPropertyName("credits")] public string? Credits { get; set; }
+        [JsonPropertyName("dayHighlight")] public int? DayHighlight { get; set; }
+        [JsonPropertyName("nightHighlight")] public int? NightHighlight { get; set; }
+    }
+
+    /// <summary>Ordered image lists per segment. Sunrise and sunset are optional (two-segment model).</summary>
+    public class TimeOfDaySegments
+    {
+        [JsonPropertyName("sunrise")] public List<string>? Sunrise { get; set; }
+        [JsonPropertyName("day")] public List<string> Day { get; set; } = new();
+        [JsonPropertyName("sunset")] public List<string>? Sunset { get; set; }
+        [JsonPropertyName("night")] public List<string> Night { get; set; } = new();
+    }
+
+    // ── colors ───────────────────────────────────────────────────────────────
+
+    public class ColorSettings
+    {
+        /// <summary>light, dark or unchanged.</summary>
+        [JsonPropertyName("appMode")] public string? AppMode { get; set; }
+        [JsonPropertyName("systemMode")] public string? SystemMode { get; set; }
+        [JsonPropertyName("transparency")] public bool? Transparency { get; set; }
+        [JsonPropertyName("accent")] public AccentColors? Accent { get; set; }
+        [JsonPropertyName("gate")] public Gate? Gate { get; set; }
+        /// <summary>classic and other Phase 2 color settings, kept verbatim.</summary>
+        [JsonExtensionData] public Dictionary<string, JsonElement>? Other { get; set; }
+    }
+
+    public class AccentColors
+    {
+        /// <summary>fixed (use <see cref="Color"/>) or auto (Windows picks from the wallpaper).</summary>
+        [JsonPropertyName("mode")] public string Mode { get; set; } = "fixed";
+        /// <summary>#RRGGBB.</summary>
+        [JsonPropertyName("color")] public string? Color { get; set; }
+        [JsonPropertyName("onStartTaskbar")] public bool? OnStartTaskbar { get; set; }
+        [JsonPropertyName("onTitleBars")] public bool? OnTitleBars { get; set; }
+        [JsonPropertyName("palette")] public AccentPalette? Palette { get; set; }
+        /// <summary>Captured Start-menu shades (#RRGGBB). Without them the palette's entries 3 and 4 are used, else <see cref="Color"/>.</summary>
+        [JsonPropertyName("accentMenu")] public string? AccentMenu { get; set; }
+        [JsonPropertyName("startMenu")] public string? StartMenu { get; set; }
+    }
+
+    /// <summary>
+    /// The 8-entry AccentPalette. "captured" palettes came from a real Windows install and replay
+    /// exactly; Windows' own shade algorithm is undocumented, so RTS never invents one (spec D7).
+    /// </summary>
+    public class AccentPalette
+    {
+        [JsonPropertyName("source")] public string Source { get; set; } = "captured";
+        /// <summary>8 colors, #RRGGBBAA in registry order.</summary>
+        [JsonPropertyName("colors")] public List<string> Colors { get; set; } = new();
+    }
+
+    // ── v1 (read-only compatibility) ─────────────────────────────────────────
+
     public class SystemIconAssets
     {
-        /// <summary>
-        /// Which PE resource container these swaps target. Defaults to
-        /// imageres.dll.mun because it's the universal Windows icon source,
-        /// but leaving it explicit lets future themes target shell32.dll.mun,
-        /// ddores.dll.mun, etc.
-        /// </summary>
-        [JsonPropertyName("targetResource")]
-        public string TargetResource { get; set; } = "imageres.dll.mun";
-
-        [JsonPropertyName("munSwaps")]
-        public List<MunSwap> MunSwaps { get; set; } = new();
+        [JsonPropertyName("targetResource")] public string TargetResource { get; set; } = "imageres.dll.mun";
+        [JsonPropertyName("munSwaps")] public List<MunSwap> MunSwaps { get; set; } = new();
     }
 
-    /// <summary>
-    /// One icon replacement inside a .mun file: "replace IconGroup N with
-    /// the .ico at this bundle-relative path."
-    /// </summary>
     public class MunSwap
     {
-        /// <summary>The PE RT_GROUP_ICON resource ID being replaced.</summary>
-        [JsonPropertyName("iconGroup")]
-        public int IconGroup { get; set; }
-
-        /// <summary>
-        /// Bundle-relative path to the replacement .ico file. Forward
-        /// slashes, no leading slash, no ".." segments.
-        /// </summary>
-        [JsonPropertyName("file")]
-        public string File { get; set; } = string.Empty;
-
-        /// <summary>
-        /// SHA256 of the original Microsoft icon group at this resource ID
-        /// when the swap was authored. On replay against a freshly-updated
-        /// .mun, if the icon at IconGroup no longer matches this hash,
-        /// Microsoft has likely renumbered or repurposed the slot — we
-        /// prompt the user to remap rather than silently overwriting.
-        /// Optional in v1 themes (older swaps just blind-overwrite).
-        /// </summary>
-        [JsonPropertyName("sourceFingerprint")]
-        public string? SourceFingerprint { get; set; }
-
-        /// <summary>
-        /// Optional human label so the marketplace can show "Recycle Bin
-        /// (Empty)" instead of "IconGroup 32".
-        /// </summary>
-        [JsonPropertyName("label")]
-        public string? Label { get; set; }
+        [JsonPropertyName("iconGroup")] public int IconGroup { get; set; }
+        [JsonPropertyName("file")] public string File { get; set; } = string.Empty;
+        [JsonPropertyName("sourceFingerprint")] public string? SourceFingerprint { get; set; }
+        [JsonPropertyName("label")] public string? Label { get; set; }
     }
 
-    /// <summary>
-    /// HKCU-scope shell override (folder/drive/system tab outputs). Lets a
-    /// bundled theme apply non-.mun overrides as part of installation.
-    /// </summary>
     public class ShellOverride
     {
-        /// <summary>
-        /// Target identifier — for system-icon scope this is the CLSID; for
-        /// drive scope it's the drive letter; for folder scope it's an
-        /// absolute path (only meaningful per-machine, so folder overrides
-        /// in shipped themes are unusual but the schema permits them).
-        /// </summary>
-        [JsonPropertyName("target")]
-        public string Target { get; set; } = string.Empty;
+        /// <summary>CLSID or target name ("system"), drive letter ("drive") or absolute path ("folder").</summary>
+        [JsonPropertyName("target")] public string Target { get; set; } = string.Empty;
+        [JsonPropertyName("scope")] public string Scope { get; set; } = string.Empty;
+        [JsonPropertyName("file")] public string File { get; set; } = string.Empty;
+        [JsonPropertyName("label")] public string? Label { get; set; }
+    }
 
-        /// <summary>"folder" | "drive" | "system"</summary>
-        [JsonPropertyName("scope")]
-        public string Scope { get; set; } = string.Empty;
+    /// <summary>Reads a build as a JSON string or number; writes it as a string.</summary>
+    public sealed class BuildTextConverter : JsonConverter<string?>
+    {
+        public override string? Read(ref Utf8JsonReader reader, System.Type t, JsonSerializerOptions o) =>
+            reader.TokenType switch
+            {
+                JsonTokenType.Null => null,
+                JsonTokenType.Number => reader.GetInt64().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                JsonTokenType.String => reader.GetString(),
+                _ => throw new JsonException("A build must be a string or a number."),
+            };
 
-        /// <summary>Bundle-relative path to the .ico file.</summary>
-        [JsonPropertyName("file")]
-        public string File { get; set; } = string.Empty;
-
-        [JsonPropertyName("label")]
-        public string? Label { get; set; }
+        public override void Write(Utf8JsonWriter writer, string? value, JsonSerializerOptions o)
+        {
+            if (value is null) writer.WriteNullValue(); else writer.WriteStringValue(value);
+        }
     }
 }

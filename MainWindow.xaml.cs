@@ -7,6 +7,7 @@ using Microsoft.Win32;
 using Revenant_Theme_Studio.Models;
 using Revenant_Theme_Studio.Services;
 using Revenant_Theme_Studio.ViewModels;
+using Revenant_Theme_Studio.Features.Licensing;
 
 namespace Revenant_Theme_Studio
 {
@@ -108,7 +109,7 @@ namespace Revenant_Theme_Studio
 
         private void LaunchMunEditor_Click(object sender, RoutedEventArgs e)
         {
-            if (!LicenseService.Instance.IsPro)
+            if (!FeatureGate.Allows(Feature.MunEditor))
             {
                 MessageBox.Show(this,
                     "The .mun editor is a Pro feature.\nActivate a Pro license to unlock it.",

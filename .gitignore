@@ -49,3 +49,12 @@ AGENTS.md
 *.pem
 config.local.*
 
+# --- sandbox harness output and private assets, added 2026-11-09 ---
+# kit/tests is the published harness (rebuild from tests/sandbox/src),
+# kit/icons holds Dave's paid icon sets, results/ is run logs.
+tests/sandbox/kit/tests/
+tests/sandbox/kit/icons/
+tests/sandbox/results/
+# Design mockup assets: paid icon-pack PNGs and unlicensed house fonts. Never public.
+docs/design/directions/assets/
+
