@@ -3,7 +3,7 @@
   <!-- Pure-logic tests on fakes. Nothing here writes the real registry or system files;
        real-Windows tests run in Windows Sandbox (tests\sandbox). -->
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

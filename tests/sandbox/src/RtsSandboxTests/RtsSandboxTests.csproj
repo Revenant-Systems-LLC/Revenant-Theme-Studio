@@ -4,7 +4,7 @@
        tests\sandbox\kit\tests because the sandbox has no .NET runtime. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -15,7 +15,7 @@
   <ItemGroup>
     <!-- Tests drive Theme Studio's own services, built from the current working tree. -->
     <Reference Include="Revenant-Theme-Studio">
-      <HintPath>..\..\..\..\bin\Debug\net8.0-windows\Revenant-Theme-Studio.dll</HintPath>
+      <HintPath>..\..\..\..\bin\Debug\$(TargetFramework)\Revenant-Theme-Studio.dll</HintPath>
     </Reference>
   </ItemGroup>
 

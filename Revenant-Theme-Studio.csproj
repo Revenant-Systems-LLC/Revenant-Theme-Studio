@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <RootNamespace>Revenant_Theme_Studio</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -46,7 +46,7 @@
          cannot start without its .dll, .runtimeconfig.json and .deps.json beside it.
          Copying the .exe alone is what left the MUN editor unable to run. -->
     <ItemGroup>
-      <_MunWriterFiles Include="$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.exe;$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.dll;$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.runtimeconfig.json;$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\net8.0-windows\win-x64\RTS.MunWriter.deps.json" />
+      <_MunWriterFiles Include="$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\$(TargetFramework)\win-x64\RTS.MunWriter.exe;$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\$(TargetFramework)\win-x64\RTS.MunWriter.dll;$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\$(TargetFramework)\win-x64\RTS.MunWriter.runtimeconfig.json;$(MSBuildThisFileDirectory)RTS.MunWriter\bin\$(Configuration)\$(TargetFramework)\win-x64\RTS.MunWriter.deps.json" />
     </ItemGroup>
     <Copy SourceFiles="@(_MunWriterFiles)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" ContinueOnError="true" />
     <Warning Condition="!Exists('$(OutputPath)RTS.MunWriter.dll') Or !Exists('$(OutputPath)RTS.MunWriter.runtimeconfig.json')"
