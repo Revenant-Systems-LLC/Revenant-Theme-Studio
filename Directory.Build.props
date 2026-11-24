@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    Lets the -windows projects (WPF, Windows-only APIs) compile on Linux and macOS,
+    for CI and cloud sessions. On Windows this condition is false, so Windows builds
+    are unchanged. A build made this way can't run the WPF UI; it only proves the
+    code compiles.
+  -->
+  <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+  </PropertyGroup>
+</Project>
